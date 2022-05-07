@@ -51,3 +51,5 @@ replace (
 	github.com/ztalab/ZACA => github.com/OpenMSP/ZACA v0.0.0-20220424055415-1c649e7615cc
 	google.golang.org/protobuf => google.golang.org/protobuf v1.25.0
 )
+
+replace go.etcd.io/etcd => go.etcd.io/etcd v3.3.27+incompatible
