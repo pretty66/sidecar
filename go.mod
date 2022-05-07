@@ -50,10 +50,11 @@ replace (
 	github.com/IceFireDB/IceFireDB-Proxy => github.com/openmsp/redis-proxy v1.0.1-0.20220426021942-2f9ba7e2db29
 	github.com/SkyAPM/go2sky v0.6.6 => github.com/openmsp/go2sky v0.6.1-0.20220425023936-79e1759a2ec3
 	github.com/StackExchange/wmi => github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d
+	github.com/dgrijalva/jwt-go/v3 => github.com/dgrijalva/jwt-go/v3 v3.2.2
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 => github.com/openmsp/redis/v8 v8.10.1-0.20210701092452-10bc715a2fea
 	github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.6.0
 	github.com/ztalab/ZACA => github.com/OpenMSP/ZACA v0.0.0-20220424055415-1c649e7615cc
+	go.etcd.io/etcd/v3 => go.etcd.io/etcd/v3 v3.5.0
 	google.golang.org/protobuf => google.golang.org/protobuf v1.25.0
 )
-
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.7

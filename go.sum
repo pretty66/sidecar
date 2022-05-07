@@ -1662,10 +1662,8 @@ go.etcd.io/etcd/raft/v3 v3.5.0/go.mod h1:UFOHSIvO/nKwd4lhkwabrTD3cqW5yVyYYf/KlD0
 go.etcd.io/etcd/server/v3 v3.5.0-alpha.0/go.mod h1:tsKetYpt980ZTpzl/gb+UOJj9RkIyCb1u4wjzMg90BQ=
 go.etcd.io/etcd/server/v3 v3.5.0 h1:jk8D/lwGEDlQU9kZXUFMSANkE22Sg5+mW27ip8xcF9E=
 go.etcd.io/etcd/server/v3 v3.5.0/go.mod h1:3Ah5ruV+M+7RZr0+Y/5mNLwC+eQlni+mQmOVdCRJoS4=
-go.etcd.io/etcd/tests/v3 v3.5.0-alpha.0/go.mod h1:HnrHxjyCuZ8YDt8PYVyQQ5d1ZQfzJVEtQWllr5Vp/30=
 go.etcd.io/etcd/tests/v3 v3.5.0 h1:+uMuHYKKlLUzbW322XrQXbaGM9qiV7vUL+AEPT/KYY4=
 go.etcd.io/etcd/tests/v3 v3.5.0/go.mod h1:f+mtZ1bE1YPvgKdOJV2BKy4JQW0nAFnQehgOE7+WyJE=
-go.etcd.io/etcd/v3 v3.5.0-alpha.0/go.mod h1:JZ79d3LV6NUfPjUxXrpiFAYcjhT+06qqw+i28snx8To=
 go.etcd.io/etcd/v3 v3.5.0 h1:fs7tB+L/xRDi/+p9qKuaPGCtMX6vkovLRXTqvEE98Ek=
 go.etcd.io/etcd/v3 v3.5.0/go.mod h1:FldM0/VzcxYWLvWx1sdA7ghKw7C3L2DvUTzGrcEtsC4=
 go.mongodb.org/mongo-driver v1.1.0/go.mod h1:u7ryQJ+DOzQmeO7zB6MHyr8jkEQvC8vH7qLUO4lqsUM=
