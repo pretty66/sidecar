@@ -1,0 +1,192 @@
+#ServiceCar YAML config file
+# 服务类型：sidecar、gateway ...
+service-type: ${MSP_SERVICE_TYPE||sidecar}
+
+# MSP_CONFIG_CENTER_ENABLE 配置中心开启
+# MSP_CONFIG_CENTER_ADDR 配置中心地址
+
+# 网络io模型 netpoll rawepoll
+# Golang 经典 netpoll 模型：goroutine-per-connection，适用于在连接数不是瓶颈的情况。
+# RawEpoll 模型：也就是 Reactor 模式，I/O 多路复用（I/O multiplexing）+ 非阻塞 I/O（non-blocking I/O）的模式。对于接入层和网关有大量长链接的场景，更加适合于 RawEpoll 模型。
+net-model: ${MSP_NET_MODEL||netpoll}
+
+# 针对网络流入进行拦截，外部网路入口
+traffic_inflow:
+  bind_protocol_type: ${MSP_PROTOCOL_MODE||mtls} #入口网络承载器，本地监听协议
+  bind_network: "tcp" #入口网络承载器，本地监听网络端口类型
+  bind_address: ${MSP_BIND_ADDRESS||0.0.0.0:8080} #入口网络承载器，本地监听网络地址
+  target_protocol_type: ${MSP_TARGET_PROTOCOL||http}
+  target_address: ${MSP_TARGET_ADDRESS||127.0.0.1:80} # 转发到同个pod下ng监听的端口
+  target_dial_timeout: 1 #到服务提供Nginx的tcp拨号超时时间、单位：秒
+  target_keep_alive: 30 #到服务提供Nginx的keepalive超时
+  target_idle_conn_timeout: 60 #到服务提供Nginx的tcp连接的空闲超时时间
+  target_max_idle_conns_per_host: 200 #关键参数，到服务提供Nginx的连接池最大容量可以为多少
+  enable_websocket: ${MSP_TRAFFIC_INFLOW_WS_ENABLE||true}
+
+traffic_outflow:
+  bind_protocol_type: "http" #入口网络承载器，本地监听协议
+  bind_network: "tcp" #入口网络承载器，本地监听网络端口类型
+  bind_address: ${MSP_OUTFLOW_BIND_ADDRESS||127.0.0.1:9090} #入口网络承载器，本地监听网络地址
+  target_dial_timeout: 5 #到服务提供Nginx的tcp拨号超时时间、单位：秒
+  target_keep_alive: 30 #到服务提供Nginx的keepalive超时
+  target_idle_conn_timeout: 60 #到服务提供Nginx的tcp连接的空闲超时时间
+  target_max_idle_conns_per_host: 200 #关键参数，到服务提供Nginx的连接池最大容量可以为多少
+
+#ServiceCar cluster Config
+redis-cluster:
+  enable: true
+  use_proxy: ${MSP_REDIS_CLUSTER_USE_PROXY||true}
+  enable_fault_tolerant: ${MSP_REDIS_CLUSTER_FAULT_TOLERANT||true} # 是否开启容错，出错后直连redis集群
+  proxy_unique_id: "msp.redisproxy.rule.rediscluster" # 固定规则redis代理uniqueID
+  timing_switch_proxy: ${MSP_REDIS_CLUSTER_SWITCH_PROXY||true} # 是否开启定时重选代理
+  switch_proxy_cycle: ${MSP_REDIS_CLUSTER_SWITCH_PROXY_CYCLE||21600} # 定时重选周期，单位：秒 6小时重连一次
+  start_nodes: ${MSP_REDIS_CLUSTER_NODES||}
+  conn_timeout: 5
+  conn_read_timeout: 1
+  conn_write_timeout: 1
+  conn_alive_timeout: 60 #单位：秒
+  conn_pool_size: 5 # 连接池0代表短连接
+  slave_operate_rate: 0 #从节点承载读流量的 百分比 ： 0-> 从节点不承载任何读流量
+  cluster_update_heartbeat: 30 #redis 集群的状态更新心跳间隔：只针对读写分离开启的场景生效 : 最低5秒
+
+#ServiceCar 内存缓存相关参数
+memory-cache:
+  enable: true
+  max_items_count: 1024 #Cache最大存储的item数量
+  default_expiration: 180000 # 缓存kv默认过期时间 (单位：毫秒)
+  cleanup_interval: 120 #cache内存清理周期（单位：秒）
+
+#ServiceCar Debug option
+debug:
+  enable: ${MSP_DEBUG_ENABLE||true}
+  pprof_uri: ${MSP_DEBUG_PPROF_URI||0.0.0.0:16060}
+
+remote_config:
+  cycle: 21 # 当没有配置更新的时候，保底的感应配置周期，21s
+
+log:
+  output: "redis" #日志输出途径 ： redis、stdout
+  debug: false
+  key: "sc_log" # 日志key
+  redis_host: ${MSP_LOG_REDIS_HOST||} # host:port 格式, log_proxy 地址，不同于redis集群地址
+
+fuse:
+  status_code: -499 # 熔断返回状态码
+  status_msg: "fuse" # 熔断错误返回消息
+  serial_error_numbers: 5 # 默认连续错误次数触发熔断
+  error_percent: 1 # 错误数占总请求数的百分比熔断，1-100，10%
+  max_request: 1 # 熔断器半开时允许运行的请求数量 默认设置为：1，请求成功则断路器关闭
+  interval: 600 # 熔断器处于关闭状态时的清除周期，默认0，如果一直是关闭则不清除请求的次数信息
+  timeout: 30 # 熔断器处于打开状态时，经过多久触发为半开状态，单位：s
+  rule_type: 1 # 熔断类型：1连续错误达到阈值熔断，2错误率达到固定百分比熔断，3连续错误次数达到阈值或错误率达到阈值熔断，4连续错误次数达到阈值和错误率同时达到阈值熔断
+  request_timeout: 5 # SideCar代理请求超时时间，单位：s
+  target: "path" #熔断粒度path单个实例下接口级别，host单个实例级别，默认接口级别
+  cycle: 1 # 定时感应配置周期，单位：s
+  state_change_report_key: "msp:service_fuse_report" # 状态变更上报的redis key, list类型
+
+rate_limiter:
+  redis_cluster_nodes: ${MSP_REDIS_CLUSTER_NODES||} # redis集群，多个用，分隔
+  max: 500 # 周期内最大请求次数
+  duration: 60 # 请求限流周期
+  api_max: 500 # api最大请求数
+  api_duration: 60 # 请求限流周期
+  cycle: 1 # 感应msp配置周期，10s
+  # 分布式限流长短连接配置，短连接：1，1 单位秒
+  max_conn_age: 200 # 最大连接时间
+  idle_check_frequency: 5 # 空闲连接检查频率
+
+# 无感链路配置
+trace:
+  enable: ${MSP_TRACE_ENABLE||true}
+  sky_collector_grpc_address: ${MSP_SKY_GRPC_ADDRESS||} # SkyWalking collector address
+
+auto_trace:
+  enable: ${MSP_TRACE_ENABLE||true}
+  type: auto #trace 无感链路 apm php内核skywalking上报
+  sky_collector_grpc_address: ${MSP_SKY_GRPC_ADDRESS||} # SkyWalking collector address
+  config_of_type: "" # 不同配置类型的个性化配置，目前主要用作apm方式的额外配置
+
+discovery: # 服务发现相关配置
+  address: ${MSP_SE_NGINX_ADDRESS||} # 服务发现终端地址:可以逗号分割多个。
+  heartbeat_to_msp: 10 # 上报msp、注册中心周期单位：秒
+  env: ${MSP_SE_ENV||} # 集群运行环境
+  msp_report_key: "msp:service_monitor_attributes" # 上报到msp的redis key
+  scheme: ${MSP_SE_SCHEME||} # mtls http
+
+service_info:
+  region: ${IDG_SITEUID||}   # 可用区
+  zone: ${IDG_CLUSTERUID||}  # 微服务zone ： 获取规则： 把zone的value当做环境变量的key进行获取、如果值为空则用zone配置文件的value进行填充
+  env: ${IDG_RUNTIME||}      # 微服务环境env ： 获取规则： 把env的value当做环境变量的key进行获取、如果值为空则用env配置文件的value进行填充
+  app_id: ${IDG_APPID||}     # 微服务appid ： 获取规则： 把app_id的value当做环境变量的key进行获取、如果值为空则用app_id配置文件的value进行填充 ->注册中心：微服务确定元素1
+  node_ip: ${NODEIP||}       # 当前服务实例所在k8s节点的nodeip
+  pod_ip: ${PODIP||}         # 当前服务所在的podip
+  namespace: ${NAMESPACE||}  # 当前服务所在的namespace
+  hostname: ${PODNAME||}     # 微服务pod name ： 获取规则： 把host_name的value当做环境变量的key进行获取、如果值为空则用os.Hostname进行填充 ->注册中心：微服务确定元素2
+  service_name: ${IDG_SERVICE_NAME||}    # 微服务可读的名称
+  #  endpoint_address: "" # ip 微服务流量入口EndPoint：获取规则： 把endpoint_address的value当做环境变量的key进行获取、如果值为空则用endpoint_address配置文件的value进行填充 ->注册中心：微服务确定元素3
+  unique_id: ${IDG_UNIQUEID||} # 微服务的unique_id
+  heartbeat: 30 #微服务心跳上报周期：单位：秒
+  service_mem_requests: ${IDG_MEM_REQUESTS||} # 服务对应的内存|cpu =>  request&limit
+  service_mem_limits: ${IDG_MEM_LIMITS||}
+  service_cpu_requests: ${IDG_CPU_REQUESTS||}
+  service_cpu_limits: ${IDG_CPU_LIMITS||}
+  sidecar_mem_limits: ${MEM_LIMITS||}
+  meta_data:
+    weight: ${IDG_WEIGHT||10} # 从环境变量读取，没有则默认为10
+    version: ${IDG_VERSION||} # 版本
+#    mode: "MSP_PROTOCOL_MODE" # 访问模式：http,https,mtls
+    service_image: ${IDG_SERVICE_IMAGEURL||}
+    service_gateway_addr: ${IDG_SERVICE_GATEWAY_ADDR||} # 网关注册的公网访问地址
+
+bbr:
+  enable: ${MSP_BBR_ENABLE||false} # bbr限流开启，探针地址不可用不影响
+  remote_resource_url: ${MSP_REMOTE_RESOURCE_URL||http://127.0.0.1:6001} # 服务容器探针地址
+
+heartbeat: # 健康检查
+  enable: ${MSP_OPEN_HEALTHCHECK||true}
+  api: ${MSP_HEARTBEAT_API||/healthcheck} # 健康检查api
+  gap: 2 # 健康检查间隔 s为单位
+  timeout: 3 # 健康检查超时时间 s为单位
+  consecutive_successes: 3  # 连续健康次数之后上线
+  consecutive_failures: 3   # 连续失败次数之后下线
+
+k8sheartbeat:
+  enable: ${MSP_OPEN_K8S_HEALTHCHECK||true}
+  api: ${MSP_K8S_HEARTBEAT_API||/}
+  bind_address: ${MSP_K8S_HEARTBEAT_ADDR||0.0.0.0:38081}
+
+influxdb:
+  enable: ${MSP_INFLUXDB_ENABLE||true}
+  address: ${MSP_INFLUXDB_ADDRESS||}
+  port: 80
+  udp_address: ${MSP_INFLUXDB_UDP_ADDRESS||} #influxdb msp数据库的udp地址，ip:port
+  database: ${MSP_INFLUXDB_DATABASES||} # 数据库名称
+  precision: "ms" #精度 n, u, ms, s, m or h
+  username: ${MSP_INFLUXDB_USERNAME||}
+  password: ${MSP_INFLUXDB_PASSWORD||}
+  max-idle-conns: 30
+  max-idle-conns-per-host: 30
+  flush-size: 20 #批量发送的点的个数
+  flush-time: 15 #定时批量发送点的时间，单位：s
+
+# 资源预警
+msp_event:
+  enable: ${MSP_RESOURCE_ALERT||true}
+  sidecar_cpu: ${MSP_RESOURCE_SC_CPU||90} # sidecar cpu 告警阈值 百分比
+  sidecar_mem: ${MSP_RESOURCE_SC_MEM||80} # sidecar 内存 阈值
+  server_cpu: ${MSP_RESOURCE_SERVER_CPU||90} # 服务cpu阈值
+  server_mem: ${MSP_RESOURCE_SERVER_MEM||80} # 服务内存阈值
+
+ca_config:
+  enable: ${MSP_CA_ENABLE||false}
+  auth_key: ${MSP_CA_AUTH_KEY||}
+  address: ${MSP_CA_ADDRESS||} # ca中心地址：https://domain
+  address_ocsp: ${MSP_CA_ADDRESS_OCSP||} # ca中心地址：https://domain
+  whitelist: [ "gateway.kong", "pprof.debug" ] # 服务端
+  security_mode: 1 # 安全验证模式，1:服务端不验证客户端unique_id, 2:验证
+
+# knative 相关配置
+knative:
+  enable: ${MSP_KNATIVE_ENABLE||true}
+  enable_scale_zero: ${MSP_KNATIVE_ENABLE_SCALE_ZERO||false} #是否在注册中心没有副本的时候查找
+  metrics_port: ${MSP_KNATIVE_METRICS_PORT||9010} # 监听的指标上报端口
