@@ -1,0 +1,8 @@
+.vscode
+bin
+.idea
+.DS_store
+.history
+cmd/ServiceCar/ServiceCar
+release_bin
+vendor

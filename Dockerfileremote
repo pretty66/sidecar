@@ -1,0 +1,18 @@
+FROM golang:latest AS golang
+ENV GOPROXY=https://goproxy.cn,direct
+RUN CGO_ENABLED=0 go get -ldflags '-s -w -extldflags -static' github.com/go-delve/delve/cmd/dlv
+
+FROM ubuntu:latest
+
+WORKDIR /root
+
+ENV DISABLE_FILE_EXPORTER=true
+
+COPY --from=golang /go/bin/dlv /
+COPY bin/ServiceCar /root/ServiceCar
+COPY config/sc_config.yaml /root/config/sc_config.yaml
+COPY config/sc_config_site_proxy.yaml /root/config/sc_config_site_proxy.yaml
+COPY wait-until-ready.sh /root/wait-until-ready.sh
+COPY wait-until-stop.sh /root/wait-until-stop.sh
+
+CMD ["/dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/root/ServiceCar", "--", "-c", "/root/config/sc_config.yaml"]
