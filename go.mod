@@ -4,15 +4,11 @@ go 1.16
 
 require (
 	github.com/IceFireDB/IceFireDB-Proxy v1.0.0
-	github.com/OneOfOne/xxhash v1.2.7 // indirect
 	github.com/SkyAPM/go2sky v0.6.6
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/agrea/ptr v0.0.0-20180711073057-77a518d99b7b
-	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b // indirect
 	github.com/buger/jsonparser v1.1.1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dgraph-io/ristretto v0.0.3 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-chassis/go-archaius v1.5.4
 	github.com/go-chassis/kie-client v0.1.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
@@ -34,8 +30,7 @@ require (
 	github.com/smallnest/weighted v0.0.0-20200820100228-10873b4c4c7e
 	github.com/sony/gobreaker v0.4.1
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/gjson v1.6.8
-	github.com/tidwall/pretty v1.1.0 // indirect
+	github.com/tidwall/gjson v1.14.1
 	github.com/urfave/cli v1.22.5
 	github.com/ztalab/ZACA v0.0.1
 	go.uber.org/automaxprocs v1.4.0
