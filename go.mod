@@ -7,8 +7,8 @@ require (
 	github.com/SkyAPM/go2sky v0.6.6
 	github.com/agrea/ptr v0.0.0-20180711073057-77a518d99b7b
 	github.com/buger/jsonparser v1.1.1
-	github.com/go-chassis/go-archaius v1.5.4
-	github.com/go-chassis/kie-client v0.1.0
+	github.com/go-chassis/go-archaius v1.5.5
+	github.com/go-chassis/kie-client v0.2.0
 	github.com/go-redis/redis/v8 v8.10.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
