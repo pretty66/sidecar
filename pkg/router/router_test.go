@@ -11,7 +11,7 @@ import (
 func TestGetUniqueIDFromKey(t *testing.T) {
 	uniqueID := "sdfsdfsdfsdf"
 	key := fmt.Sprintf(RouterConfigKey, uniqueID)
-	r := &RouterRule{}
+	r := &Rule{}
 	if r.getUniqueIDFromKey(key) != uniqueID {
 		t.Fail()
 	}

@@ -112,7 +112,7 @@ func (l *RateLimiter) HTTPRateLimiter(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (l *RateLimiter) Limiter(ctx context.Context, api string) *errno.Errno {
+func (l *RateLimiter) Limiter(ctx context.Context, api string) *errno.SCError {
 	l.lock.RLock()
 
 	if len(l.limiters) == 0 {
@@ -124,10 +124,10 @@ func (l *RateLimiter) Limiter(ctx context.Context, api string) *errno.Errno {
 	if ok {
 		res, err := limit.Get(ctx, api)
 		if err != nil {
-			return errno.LimiterError.Add(err.Error())
+			return errno.ErrLimiter.Add(err.Error())
 		}
 		if res.Remaining < 0 {
-			return errno.LimiterError
+			return errno.ErrLimiter
 		}
 	}
 
@@ -138,10 +138,10 @@ func (l *RateLimiter) Limiter(ctx context.Context, api string) *errno.Errno {
 	if ok {
 		res, err := limit.Get(ctx, l.UniqueID)
 		if err != nil {
-			return errno.LimiterError.Add(err.Error())
+			return errno.ErrLimiter.Add(err.Error())
 		}
 		if res.Remaining < 0 {
-			return errno.LimiterError
+			return errno.ErrLimiter
 		}
 	}
 	return nil

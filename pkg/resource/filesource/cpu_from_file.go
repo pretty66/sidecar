@@ -246,13 +246,13 @@ func getLimitedCoreCountFromCPUSet() (float64, error) {
 			continue
 		}
 		if len(r) > 2 {
-			return 0.0, fmt.Errorf("Invalid list format of cpuset.cpus: %s", line)
+			return 0.0, fmt.Errorf("invalid list format of cpuset.cpus: %s", line)
 		}
 
 		f, e1 := strconv.Atoi(r[0])
 		t, e2 := strconv.Atoi(r[1])
 		if e1 != nil || e2 != nil {
-			return 0.0, fmt.Errorf("Invalid list format of cpuset.cpus: %s", line)
+			return 0.0, fmt.Errorf("invalid list format of cpuset.cpus: %s", line)
 		}
 		cores += t - f + 1
 	}

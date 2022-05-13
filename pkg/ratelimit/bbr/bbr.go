@@ -220,7 +220,7 @@ func (l *BBR) Allow(ctx context.Context, opts ...ratelimit.AllowOption) (func(in
 		opt.Apply(allowOpts)
 	}
 	if l.shouldDrop() {
-		return nil, errno.BbrLimiterError
+		return nil, errno.ErrBBRLimiter
 	}
 	atomic.AddInt64(&l.inFlight, 1)
 	stime := time.Since(initTime)
@@ -302,7 +302,7 @@ func (l *BBR) HTTPBBRAllow(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		done, err := l.Allow(context.TODO())
 		if err != nil {
-			e, _ := err.(*errno.Errno)
+			e, _ := err.(*errno.SCError)
 			state, _ := json.Marshal(l.Stat())
 			cilog.LogWarnf(cilog.LogNameSidecar, "bbr be triggered，bbr state：%s", string(state))
 			return out.HTTPJsonRateLimitError(c.Response(), http.StatusTooManyRequests, e)

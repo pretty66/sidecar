@@ -58,7 +58,7 @@ func (fs *FileSource) CurrentMemStat() (stat *resource.MemStat, err error) {
 		}
 		stat.RSS = uint64(memoryUsageInBytes)
 	}
-	return
+	return stat, err
 }
 
 func getHostMemTotal() (n uint64, err error) {

@@ -13,9 +13,9 @@ import (
 // Doc: https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
 // Reference: http://linuxperf.com/?p=142
 
-func (hs *HttpSource) CurrentMemStat() (stat *resource.MemStat, err error) {
+func (hs *HTTPSource) CurrentMemStat() (stat *resource.MemStat, err error) {
 	var m map[string]uint64
-	m, err = resource.ReadMapFromRemote(hs.remoteUrl, "/sys/fs/cgroup/memory/memory.stat")
+	m, err = resource.ReadMapFromRemote(hs.remoteURL, "/sys/fs/cgroup/memory/memory.stat")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (hs *HttpSource) CurrentMemStat() (stat *resource.MemStat, err error) {
 
 	stat.Cached = m["total_cache"]
 	stat.MappedFile = m["total_mapped_file"]
-	memoryUsageInBytes, err := resource.ReadIntFromRemote(hs.remoteUrl, "/sys/fs/cgroup/memory/memory.usage_in_bytes")
+	memoryUsageInBytes, err := resource.ReadIntFromRemote(hs.remoteURL, "/sys/fs/cgroup/memory/memory.usage_in_bytes")
 	if err != nil {
 		stat.RSS = m["total_rss"] + stat.MappedFile
 	} else {
@@ -43,13 +43,13 @@ func (hs *HttpSource) CurrentMemStat() (stat *resource.MemStat, err error) {
 		}
 		stat.RSS = uint64(memoryUsageInBytes)
 	}
-	return
+	return stat, err
 }
 
-func (hs *HttpSource) getHostMemTotal() (n uint64, err error) {
+func (hs *HTTPSource) getHostMemTotal() (n uint64, err error) {
 	var scanner *bufio.Scanner
 
-	ret, err := resource.RemoteGetSourceByte(hs.remoteUrl, "/proc/meminfo")
+	ret, err := resource.RemoteGetSourceByte(hs.remoteURL, "/proc/meminfo")
 	if err != nil {
 		return 0, err
 	}
@@ -78,7 +78,7 @@ func (hs *HttpSource) getHostMemTotal() (n uint64, err error) {
 	return
 }
 
-func (hs *HttpSource) totalMemory(m map[string]uint64) (uint64, error) {
+func (hs *HTTPSource) totalMemory(m map[string]uint64) (uint64, error) {
 	hostTotal, err := hs.getHostMemTotal()
 	if err != nil {
 		return 0, err
@@ -93,7 +93,7 @@ func (hs *HttpSource) totalMemory(m map[string]uint64) (uint64, error) {
 	return hostTotal, nil
 }
 
-func (hs *HttpSource) swapState(m map[string]uint64) (total uint64, used uint64) {
+func (hs *HTTPSource) swapState(m map[string]uint64) (total uint64, used uint64) {
 	memSwap, ok := m["hierarchical_memsw_limit"]
 	if !ok {
 		return 0, 0
@@ -109,6 +109,6 @@ func (hs *HttpSource) swapState(m map[string]uint64) (total uint64, used uint64)
 	return total, used
 }
 
-func (hs *HttpSource) GetRss() (int64, error) {
+func (hs *HTTPSource) GetRss() (int64, error) {
 	return 0, nil
 }

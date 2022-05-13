@@ -5,21 +5,21 @@ import (
 	"log"
 )
 
-type Errno struct {
+type SCError struct {
 	State int    `json:"state"`
 	Msg   string `json:"msg"`
 }
 
-func (e Errno) Error() string {
+func (e SCError) Error() string {
 	return e.Msg
 }
 
-func (e Errno) Add(s string) *Errno {
+func (e SCError) Add(s string) *SCError {
 	e.Msg += ": " + s
 	return &e
 }
 
-func (e *Errno) Encode() []byte {
+func (e *SCError) Encode() []byte {
 	b, err := json.Marshal(e)
 	if err != nil {
 		log.Println(err)
@@ -28,6 +28,6 @@ func (e *Errno) Encode() []byte {
 	return b
 }
 
-func (e *Errno) String() string {
+func (e *SCError) String() string {
 	return string(e.Encode())
 }

@@ -41,7 +41,7 @@ func EchoBodyLogMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			reqBuf := requestBodyPool.Get().(*bytes.Buffer)
 			_, _ = reqBuf.ReadFrom(ctx.Request().Body)
 			ctx.Request().Body = ioutil.NopCloser(reqBuf)
-			ctx.Set(confer.REQUEST_BODY_KEY, reqBuf.Bytes())
+			ctx.Set(confer.RequestBodyKey, reqBuf.Bytes())
 
 			defer func() {
 				reqBuf.Reset()

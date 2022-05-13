@@ -22,7 +22,7 @@ type Metrics struct {
 	flushTimer         *time.Ticker
 	influxDBHttpClient *HTTPClient
 	ctx                context.Context
-	loggerControl      *loggerControl
+	loggerControl      *LoggerControl
 }
 
 // MetricsData ...

@@ -28,17 +28,6 @@ func newCgroupCPU() (cpu *cgroupCPU, err error) {
 	parts := strings.Split(line, " ")
 	cores = len(parts)
 
-	//cores, err = pscpu.Counts(true)
-	//if err != nil || cores == 0 {
-	//	var cpus []uint64
-	//	cpus, err = perCPUUsage()
-	//	if err != nil {
-	//		err = errors.Errorf("perCPUUsage() failed!err:=%v", err)
-	//		return
-	//	}
-	//	cores = len(cpus)
-	//}
-
 	sets, err := cpuSets()
 	if err != nil {
 		err = errors.Errorf("cpuSets() failed!err:=%v", err)
@@ -76,7 +65,7 @@ func newCgroupCPU() (cpu *cgroupCPU, err error) {
 		preSystem: preSystem,
 		preTotal:  preTotal,
 	}
-	return
+	return cpu, err
 }
 
 func (cpu *cgroupCPU) Usage() (u uint64, err error) {
@@ -85,15 +74,10 @@ func (cpu *cgroupCPU) Usage() (u uint64, err error) {
 		system uint64
 	)
 	total, err = totalCPUUsage()
-
-	// fmt.Println(total, "++++++++++++++++")
 	if err != nil {
 		return
 	}
 	system, err = systemCPUUsage()
-	// fmt.Println(system, "-----------------")
-	// fmt.Println(cpu.preSystem, "=================")
-
 	if err != nil {
 		return
 	}

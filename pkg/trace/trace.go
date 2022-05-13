@@ -58,13 +58,13 @@ var defaultApmConfig = apmConfig{
 	AgentTrimMaxSize:   10 * 1024, // 10 M
 }
 
-func NewTrace(SkyCollectorGrpcAddress string, c Config, configChan <-chan []byte) (t *Trace, err error) {
-	if c.Enable && SkyCollectorGrpcAddress == "" {
-		return nil, errors.New("SkyCollectorGrpcAddress is empty")
+func NewTrace(skyCollectorGrpcAddress string, c Config, configChan <-chan []byte) (t *Trace, err error) {
+	if c.Enable && skyCollectorGrpcAddress == "" {
+		return nil, errors.New("skyCollectorGrpcAddress is empty")
 	}
 	t = &Trace{
 		config:     c,
-		skyAddress: SkyCollectorGrpcAddress,
+		skyAddress: skyCollectorGrpcAddress,
 	}
 	t.configChan = configChan
 	if !c.Enable {
@@ -73,7 +73,7 @@ func NewTrace(SkyCollectorGrpcAddress string, c Config, configChan <-chan []byte
 		return t, nil
 	}
 	t.close.Store(false)
-	r, err := reporter.NewGRPCReporter(SkyCollectorGrpcAddress,
+	r, err := reporter.NewGRPCReporter(skyCollectorGrpcAddress,
 		reporter.WithCheckInterval(time.Second*40),
 		reporter.WithMaxSendQueueSize(65535*2),
 	)
@@ -86,7 +86,7 @@ func NewTrace(SkyCollectorGrpcAddress string, c Config, configChan <-chan []byte
 	if err != nil {
 		return nil, err
 	}
-	var closeTraceFunc func() = nil
+	var closeTraceFunc func()
 	switch c.Type {
 	case typeAuto:
 		closeTraceFunc = t.closeTrace
@@ -104,7 +104,7 @@ func NewTrace(SkyCollectorGrpcAddress string, c Config, configChan <-chan []byte
 		t.apm = service.NewAgent(
 			ctx,
 			8,
-			SkyCollectorGrpcAddress,
+			skyCollectorGrpcAddress,
 			apmConf.AgentListenNetType,
 			apmConf.AgentListenNetURI,
 			apmConf.AgentSendRate,
@@ -183,7 +183,7 @@ func (t *Trace) applyConfig(c Config) error {
 		t.close.Store(false)
 	}()
 	t.sky.Reload(c.Type != typeApm, r)
-	var closeTraceFunc func() = nil
+	var closeTraceFunc func()
 	switch c.Type {
 	case typeAuto:
 		closeTraceFunc = t.closeTrace

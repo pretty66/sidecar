@@ -12,9 +12,9 @@ import (
 
 const (
 	// parse validates the body maximum limit
-	RESPONSE_LIMIT_BODY = 65536
+	ResponseLimitBody = 65536
 	// response body size alarm threshold
-	RESPONSE_LIMIT_BODY_WARING = 1024 * 1024
+	ResponseLimitBodyWaring = 1024 * 1024
 )
 
 func NetHTTPResponseHandle(next echo.HandlerFunc) echo.HandlerFunc {
@@ -23,17 +23,17 @@ func NetHTTPResponseHandle(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil || ctx.Response().Status > 400 {
 			return err
 		}
-		if ctx.Response().Size > 0 && ctx.Response().Size <= RESPONSE_LIMIT_BODY {
+		if ctx.Response().Size > 0 && ctx.Response().Size <= ResponseLimitBody {
 			res := util.GetResponseBody(ctx.Response().Writer)
 			if len(res) > 0 && gjson.ValidBytes(res) {
 				state := gjson.GetBytes(res, "state").String()
 				if state != "1" {
 					app := ctx.Get(confer.AppInfoKey).(*confer.RemoteApp)
-					out.HTTPResponseWaring(ctx, app, errno.TargetResponseWaring)
+					out.HTTPResponseWaring(ctx, app, errno.ErrTargetResponseWaring)
 				}
 			}
 		}
-		if ctx.Response().Size > RESPONSE_LIMIT_BODY_WARING {
+		if ctx.Response().Size > ResponseLimitBodyWaring {
 			app := ctx.Get(confer.AppInfoKey).(*confer.RemoteApp)
 			out.HTTPResponseWaringBodySize(ctx, app, ctx.Response().Size)
 		}

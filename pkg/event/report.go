@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	MSP_EVENT             = "msp:event_msg"
-	EVENT_TYPE_FUSE       = "fuse"
-	EVENT_TYPE_RATE_LIMIT = "ratelimit"
-	EVENT_TYPE_HEARTBEAT  = "heartbeat"
-	EVENT_TYPE_RESOURCE   = "resource"
+	MspEvent           = "msp:event_msg"
+	EventTypeFuse      = "fuse"
+	EventTypeRateLimit = "ratelimit"
+	EventTypeHeartbeat = "heartbeat"
+	EventTypeResource  = "resource"
 )
 
-type EventReport struct {
+type Report struct {
 	redisCluster autoredis.AutoClient
 }
 
@@ -29,20 +29,20 @@ type MSPEvent struct {
 	EventBody interface{} `json:"event_body"`
 }
 
-var _eventReport *EventReport
+var _eventReport *Report
 
-func InitEventClient(rc autoredis.AutoClient) *EventReport {
+func InitEventClient(rc autoredis.AutoClient) *Report {
 	if _eventReport == nil {
-		_eventReport = &EventReport{redisCluster: rc}
+		_eventReport = &Report{redisCluster: rc}
 	}
 	return _eventReport
 }
 
-func Client() *EventReport {
+func Client() *Report {
 	return _eventReport
 }
 
-func (ev *EventReport) Report(evType string, eventBody interface{}) {
+func (ev *Report) Report(evType string, eventBody interface{}) {
 	msg := MSPEvent{
 		EventType: evType,
 		EventTime: time.Now().UnixNano() / 1e6,
@@ -53,7 +53,7 @@ func (ev *EventReport) Report(evType string, eventBody interface{}) {
 		cilog.LogErrorw(cilog.LogNameSidecar, "event report json.Marshal err", err)
 		return
 	}
-	_, err = ev.redisCluster.Do("LPUSH", MSP_EVENT, b)
+	_, err = ev.redisCluster.Do("LPUSH", MspEvent, b)
 
 	if err != nil && !errors.Is(err, redis.ErrClosed) {
 		cilog.LogErrorw(cilog.LogNameSidecar, "heartbeat report redis rpush", err)

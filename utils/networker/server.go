@@ -35,10 +35,10 @@ type HTTPReverseProxy struct {
 }
 
 var (
-	ErrProtocolType  = errors.New("Application layer protocol is not supported")
-	ErrBindNetWork   = errors.New("Network monitoring category is not supported")
-	ErrBindAddress   = errors.New("Bind address not invalid")
-	ErrTargetAddress = errors.New("Target address not invalid")
+	ErrProtocolType  = errors.New("application layer protocol is not supported")
+	ErrBindNetWork   = errors.New("network monitoring category is not supported")
+	ErrBindAddress   = errors.New("bind address not invalid")
+	ErrTargetAddress = errors.New("target address not invalid")
 )
 
 func CheckOption(option *ReverseProxyServerOption) error {
@@ -70,7 +70,7 @@ func CheckOption(option *ReverseProxyServerOption) error {
 	return nil
 }
 
-func NewHttpReverseProxyServer(option *ReverseProxyServerOption) (*HTTPReverseProxy, error) {
+func NewHTTPReverseProxyServer(option *ReverseProxyServerOption) (*HTTPReverseProxy, error) {
 	err := CheckOption(option)
 	if err != nil {
 		return nil, err

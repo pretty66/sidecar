@@ -85,7 +85,7 @@ func TestRollingGaugeReduce(t *testing.T) {
 		BucketDuration: bucketDuration,
 	}
 	r := NewRollingGauge(opts)
-	for x := 0; x < size; x = x + 1 {
+	for x := 0; x < size; x++ {
 		for i := 0; i <= x; i++ {
 			r.Add(int64(i))
 		}

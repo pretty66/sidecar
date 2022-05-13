@@ -3,6 +3,7 @@ package sidecar
 import (
 	"context"
 	"errors"
+	"github.com/openmsp/sidecar/pkg/metrics"
 	"io"
 	"log"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"github.com/openmsp/sidecar/pkg/acl"
 	"github.com/openmsp/sidecar/pkg/confer"
 	"github.com/openmsp/sidecar/pkg/errno"
-	"github.com/openmsp/sidecar/pkg/metrics"
 	localmidd "github.com/openmsp/sidecar/pkg/middleware"
 	"github.com/openmsp/sidecar/pkg/out"
 	"github.com/openmsp/sidecar/sc"
@@ -69,7 +69,7 @@ func (hp *httpReverseProxyServer) startInflow() {
 			TargetMaxIdleConnsPerHost: hp.Confer.Opts.TrafficInflow.TargetMaxIdleConnsPerHost,
 		}
 	}
-	hp.inflow, err = networker.NewHttpReverseProxyServer(hp.inProxyConfig)
+	hp.inflow, err = networker.NewHTTPReverseProxyServer(hp.inProxyConfig)
 	if err != nil {
 		panic("inflow proxy init fail：" + err.Error())
 	}
@@ -120,7 +120,7 @@ func (hp *httpReverseProxyServer) startOutflow() {
 		TargetIdleConnTimeout:     time.Duration(hp.Confer.Opts.TrafficOutflow.TargetIdleConnTimeout) * time.Second,
 		TargetMaxIdleConnsPerHost: hp.Confer.Opts.TrafficOutflow.TargetMaxIdleConnsPerHost,
 	}
-	hp.outflow, err = networker.NewHttpReverseProxyServer(&option)
+	hp.outflow, err = networker.NewHTTPReverseProxyServer(&option)
 	if err != nil {
 		panic("outflow init fail：" + err.Error())
 	}
@@ -214,12 +214,10 @@ func (hp *httpReverseProxyServer) registerInflowRouter(e *echo.Echo, protocol st
 	midd = append(midd,
 		hp.TrafficInRateLimiter.HTTPRateLimiter,
 		localmidd.EchoBodyLogMiddleware,
-	)
-	midd = append(midd, hp.Trace.GetSky().HTTPInflowTraceHandle)
-	midd = append(midd,
+		hp.Trace.GetSky().HTTPInflowTraceHandle,
 		metrics.NetHTTPMetrics,
-		localmidd.NetHTTPDebugMiddleware("inflow"))
-
+		localmidd.NetHTTPDebugMiddleware("inflow"),
+	)
 	e.Any("*", hp.inflowProxy, midd...)
 }
 
@@ -235,7 +233,7 @@ func (hp *httpReverseProxyServer) inflowProxy(ctx echo.Context) error {
 		if ignoreErr(err) {
 			return nil
 		}
-		return out.HTTPJsonResponseError(ctx, nil, errno.RequestError.Add(err.Error()))
+		return out.HTTPJsonResponseError(ctx, nil, errno.ErrRequest.Add(err.Error()))
 	}
 	defer resp.Body.Close()
 
@@ -282,7 +280,7 @@ func (hp *httpReverseProxyServer) outflowProxy(ctx echo.Context) error {
 		app.Timeout = time.Duration(hp.Confer.Opts.Fuse.RequestTimeout) * time.Second
 	}
 	// set caller unique id
-	req.Header.Set(confer.REQUEST_HEADER_FROM_UNIQUEID, app.AppID)
+	req.Header.Set(confer.RequestHeaderFromUniqueID, app.AppID)
 	t, cancel := context.WithTimeout(req.Context(), app.Timeout)
 	defer cancel()
 	resp, err := hp.outflow.Proxy.Transport.RoundTrip(req.WithContext(t))
@@ -291,9 +289,9 @@ func (hp *httpReverseProxyServer) outflowProxy(ctx echo.Context) error {
 			return nil
 		}
 		if errors.Is(err, context.DeadlineExceeded) {
-			return errno.RequestError.Add("request timeout！")
+			return errno.ErrRequest.Add("request timeout！")
 		}
-		return errno.ResponseError.Add(err.Error())
+		return errno.ErrResponse.Add(err.Error())
 	}
 	defer resp.Body.Close()
 	// clear header

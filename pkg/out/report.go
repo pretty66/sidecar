@@ -12,10 +12,10 @@ import (
 type RequestErrorLogReportContent struct {
 	AppKey      string            `json:"-"`
 	Channel     string            `json:"-"`
-	TraceId     string            `json:"-"`
+	TraceID     string            `json:"-"`
 	SubOrgKey   string            `json:"-"`
-	AccountId   string            `json:"-"`
-	Url         string            `json:"-"`
+	AccountID   string            `json:"-"`
+	URL         string            `json:"-"`
 	ErrCode     string            `json:"-"`
 	UniqueID    string            `json:"unique_id"`
 	Hostname    string            `json:"hostname"`
@@ -61,10 +61,10 @@ func RequestErrorLogReport(tag string, body *RequestErrorLogReportContent) {
 		AppKey:     body.AppKey,
 		Channel:    body.Channel,
 		SubOrgKey:  body.SubOrgKey,
-		TraceID:    body.TraceId,
-		Url:        body.Url,
+		TraceID:    body.TraceID,
+		Url:        body.URL,
 		ErrCode:    body.ErrCode,
-		CustomLog1: body.AccountId,
+		CustomLog1: body.AccountID,
 	}, fmt.Sprintf("%sservice request error：%s", tag, string(b)))
 }
 
@@ -95,9 +95,9 @@ func RequestWaringLogReport(body *RequestErrorLogReportContent) {
 		AppKey:     body.AppKey,
 		Channel:    body.Channel,
 		SubOrgKey:  body.SubOrgKey,
-		TraceID:    body.TraceId,
-		Url:        body.Url,
+		TraceID:    body.TraceID,
+		Url:        body.URL,
 		ErrCode:    body.ErrCode,
-		CustomLog1: body.AccountId,
+		CustomLog1: body.AccountID,
 	}, "service request exception："+string(b))
 }

@@ -11,7 +11,7 @@ var ethInterface string
 
 var ErrDefaultEthInterfaceNotfound = fmt.Errorf("default EthInterface notfound")
 
-func (hs *HttpSource) CurrentNetworkStat(interval time.Duration, callback resource.NetStatCallback) {
+func (hs *HTTPSource) CurrentNetworkStat(interval time.Duration, callback resource.NetStatCallback) {
 	var rxbytesOld, txbytesOld uint64
 	var err error
 	if ethInterface == "" {

@@ -2,9 +2,8 @@ package config_test
 
 import (
 	"github.com/openmsp/sidecar/internal/config"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestPrefixedBy(t *testing.T) {

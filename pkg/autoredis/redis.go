@@ -136,7 +136,7 @@ func (c *Client) Do(cmd string, args ...interface{}) (data interface{}, err erro
 			cilog.LogErrorw(cilog.LogNameSidecar, "Reconnect proxy error：", e)
 		}
 	}
-	return
+	return data, err
 }
 
 func (c *Client) Close() {

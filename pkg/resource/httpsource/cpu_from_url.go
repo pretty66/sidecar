@@ -29,21 +29,21 @@ var (
 	ErrNoCPUTick               = fmt.Errorf("no cpu tick")
 )
 
-type HttpSource struct {
-	remoteUrl string
+type HTTPSource struct {
+	remoteURL string
 }
 
-func NewHttpSource(url string) resource.Resource {
-	res := &HttpSource{url}
+func NewHTTPSource(url string) resource.Resource {
+	res := &HTTPSource{url}
 	res.InitData()
 	return res
 }
 
-func (hs *HttpSource) InitSuccess() bool {
+func (hs *HTTPSource) InitSuccess() bool {
 	return limitedCoreCount > 0
 }
 
-func (hs *HttpSource) GetCPUStat(interval time.Duration, callback resource.CPUStatCallback) {
+func (hs *HTTPSource) GetCPUStat(interval time.Duration, callback resource.CPUStatCallback) {
 	if cpuTick == 0 {
 		callback(nil, ErrNoCPUTick)
 		return
@@ -112,7 +112,7 @@ func tickToNano() float64 {
 	return 1000.0 * 1000.0 * 1000.0 / float64(cpuTick)
 }
 
-func (hs *HttpSource) InitData() bool {
+func (hs *HTTPSource) InitData() bool {
 	var err error
 	coreCount, err = hs.GetCoreCount()
 	if err != nil {
@@ -143,13 +143,13 @@ func (hs *HttpSource) InitData() bool {
 	return limitedCoreCount > 0
 }
 
-func (hs *HttpSource) getSystemCPUUsage() (uint64, error) {
+func (hs *HTTPSource) getSystemCPUUsage() (uint64, error) {
 	// $ cat /proc/stat
 	// cpu  42812 0 17335 3256641 333 9 1748 0 0 0
 
 	var scanner *bufio.Scanner
 
-	ret, err := resource.RemoteGetSourceByte(hs.remoteUrl, "/proc/stat")
+	ret, err := resource.RemoteGetSourceByte(hs.remoteURL, "/proc/stat")
 	if err != nil {
 		return 0, err
 	}
@@ -179,15 +179,15 @@ func (hs *HttpSource) getSystemCPUUsage() (uint64, error) {
 	return 0, fmt.Errorf("cpu line not found in /proc/stat")
 }
 
-func (hs *HttpSource) getTotalCPUUsage() (uint64, error) {
-	return resource.ReadNumberFromRemote(hs.remoteUrl, "/sys/fs/cgroup/cpuacct/cpuacct.usage")
+func (hs *HTTPSource) getTotalCPUUsage() (uint64, error) {
+	return resource.ReadNumberFromRemote(hs.remoteURL, "/sys/fs/cgroup/cpuacct/cpuacct.usage")
 }
 
-func (hs *HttpSource) GetCoreCount() (uint64, error) {
+func (hs *HTTPSource) GetCoreCount() (uint64, error) {
 	var data []byte
 	var err error
 
-	data, err = resource.RemoteGetSourceByte(hs.remoteUrl, "/sys/fs/cgroup/cpuacct/cpuacct.usage_percpu")
+	data, err = resource.RemoteGetSourceByte(hs.remoteURL, "/sys/fs/cgroup/cpuacct/cpuacct.usage_percpu")
 	if err != nil {
 		return 0, err
 	}
@@ -198,24 +198,24 @@ func (hs *HttpSource) GetCoreCount() (uint64, error) {
 	return uint64(l), nil
 }
 
-func (hs *HttpSource) getCPUThrottled() (uint64, error) {
+func (hs *HTTPSource) getCPUThrottled() (uint64, error) {
 	var m map[string]uint64
 	var err error
 
-	m, err = resource.ReadMapFromRemote(hs.remoteUrl, "/sys/fs/cgroup/cpu/cpu.stat")
+	m, err = resource.ReadMapFromRemote(hs.remoteURL, "/sys/fs/cgroup/cpu/cpu.stat")
 	if err != nil {
 		return 0, err
 	}
 	return m["nr_throttled"], nil
 }
 
-func (hs *HttpSource) GetLimitedCoreCount() (float64, error) {
+func (hs *HTTPSource) GetLimitedCoreCount() (float64, error) {
 	if limitedCoreCount > 0 {
 		return limitedCoreCount, nil
 	}
 	var quota, period int64
 	var err error
-	quota, err = resource.ReadIntFromRemote(hs.remoteUrl, "/sys/fs/cgroup/cpu/cpu.cfs_quota_us")
+	quota, err = resource.ReadIntFromRemote(hs.remoteURL, "/sys/fs/cgroup/cpu/cpu.cfs_quota_us")
 	if err != nil {
 		return 0, err
 	}
@@ -223,7 +223,7 @@ func (hs *HttpSource) GetLimitedCoreCount() (float64, error) {
 	if quota == -1 {
 		return hs.getLimitedCoreCountFromCPUSet()
 	}
-	period, err = resource.ReadIntFromRemote(hs.remoteUrl, "/sys/fs/cgroup/cpu/cpu.cfs_period_us")
+	period, err = resource.ReadIntFromRemote(hs.remoteURL, "/sys/fs/cgroup/cpu/cpu.cfs_period_us")
 	if err != nil {
 		return 0, err
 	}
@@ -235,10 +235,10 @@ func (hs *HttpSource) GetLimitedCoreCount() (float64, error) {
 	return float64(quota) / float64(period), nil
 }
 
-func (hs *HttpSource) getLimitedCoreCountFromCPUSet() (float64, error) {
+func (hs *HTTPSource) getLimitedCoreCountFromCPUSet() (float64, error) {
 	var data []byte
 	var err error
-	data, err = resource.RemoteGetSourceByte(hs.remoteUrl, "/sys/fs/cgroup/cpuset/cpuset.cpus")
+	data, err = resource.RemoteGetSourceByte(hs.remoteURL, "/sys/fs/cgroup/cpuset/cpuset.cpus")
 	if err != nil {
 		return 0.0, err
 	}
@@ -254,19 +254,19 @@ func (hs *HttpSource) getLimitedCoreCountFromCPUSet() (float64, error) {
 			continue
 		}
 		if len(r) > 2 {
-			return 0.0, fmt.Errorf("Invalid list format of cpuset.cpus: %s", line)
+			return 0.0, fmt.Errorf("invalid list format of cpuset.cpus: %s", line)
 		}
 
 		f, e1 := strconv.Atoi(r[0])
 		t, e2 := strconv.Atoi(r[1])
 		if e1 != nil || e2 != nil {
-			return 0.0, fmt.Errorf("Invalid list format of cpuset.cpus: %s", line)
+			return 0.0, fmt.Errorf("invalid list format of cpuset.cpus: %s", line)
 		}
 		cores += t - f + 1
 	}
 	return float64(cores), nil
 }
 
-func (*HttpSource) GetCPUCount() float64 {
+func (*HTTPSource) GetCPUCount() float64 {
 	return limitedCoreCount
 }

@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	FUSE_ON        = 1
-	FUSE_OFF       = 2
-	FUSE_STATUS_1  = "continuous errors reach the threshold for fusing"
-	FUSE_STATUS_2  = "the error rate reaches a fixed percentage of fuses"
-	FUSE_STATUS_3  = "The number of consecutive errors reaches the threshold or the error rate reaches the threshold"
-	FUSE_STATUS_4  = "The number of consecutive errors reaches the threshold and the error rate simultaneously reaches the threshold"
-	FUSE_ALERT_ON  = "the service fuse is enabled"
-	FUSE_ALERT_OFF = "the service is restored"
+	FuseOn       = 1
+	FuseOff      = 2
+	FuseStatus1  = "continuous errors reach the threshold for fusing"
+	FuseStatus2  = "the error rate reaches a fixed percentage of fuses"
+	FuseStatus3  = "The number of consecutive errors reaches the threshold or the error rate reaches the threshold"
+	FuseStatus4  = "The number of consecutive errors reaches the threshold and the error rate simultaneously reaches the threshold"
+	FuseAlertOn  = "the service fuse is enabled"
+	FuseAlertOff = "the service is restored"
 
 	TargetPath    = 1
 	TargetHost    = 2
@@ -140,21 +140,21 @@ func (fc *fuseConfig) String() string {
 // write to the fusing log
 func recordFuseWarning(params reportStats) {
 	var eventMsg, fuseMsg string
-	if params.Status == FUSE_ON {
-		eventMsg = FUSE_ALERT_ON
-	} else if params.Status == FUSE_OFF {
-		eventMsg = FUSE_ALERT_OFF
+	if params.Status == FuseOn {
+		eventMsg = FuseAlertOn
+	} else if params.Status == FuseOff {
+		eventMsg = FuseAlertOff
 	}
-	if params.Status == FUSE_ON {
+	if params.Status == FuseOn {
 		switch {
 		case params.FuseRuleType == 1:
-			fuseMsg = FUSE_STATUS_1
+			fuseMsg = FuseStatus1
 		case params.FuseRuleType == 2:
-			fuseMsg = FUSE_STATUS_2
+			fuseMsg = FuseStatus2
 		case params.FuseRuleType == 3:
-			fuseMsg = FUSE_STATUS_3
+			fuseMsg = FuseStatus3
 		case params.FuseRuleType == 4:
-			fuseMsg = FUSE_STATUS_4
+			fuseMsg = FuseStatus4
 		}
 	}
 	textLog := fmt.Sprintf(`time of occurrence:%s;event:%s;from-service-name:%s;from-unique_id:%s;from-hostname:%s;to-unique_id:%s;to-hostname:%s;trigger rules:%s`,
@@ -167,9 +167,9 @@ func recordFuseWarning(params reportStats) {
 		params.ToHostname,
 		fuseMsg,
 	)
-	if params.Status == FUSE_ON {
+	if params.Status == FuseOn {
 		cilog.LogError(cilog.LogNameSidecar, textLog)
-	} else if params.Status == FUSE_OFF {
+	} else if params.Status == FuseOff {
 		cilog.LogInfof(cilog.LogNameSidecar, textLog)
 	}
 }

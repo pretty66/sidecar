@@ -19,9 +19,9 @@ const (
 
 const (
 	// Traffic management
-	SERVICE_TYPE_SIDECAR = "sidecar"
+	ServiceTypeSidecar = "sidecar"
 	// As a cluster gateway
-	SERVICE_TYPE_GATEWAY = "gateway"
+	ServiceTypeGateway = "gateway"
 )
 
 var _confer *Confer
@@ -193,7 +193,7 @@ func GetNewConfer(serviceType, confFileURI string) (confer *Confer, err error) {
 	confer.replaceByEnv(&confer.Opts.MiscroServiceInfo.NodeIP)
 	confer.replaceByEnv(&confer.Opts.MiscroServiceInfo.PodIP)
 	if confer.Opts.MiscroServiceInfo.PodIP == "" {
-		return nil, errors.New("The service access address is incorrectly configured！")
+		return nil, errors.New("the service access address is incorrectly configured")
 	}
 	err = confer.handleSidecarEndpoint()
 	if err != nil {
@@ -296,7 +296,7 @@ func (confer *Confer) handleSidecarEndpoint() error {
 	}
 	_, port, err := net.SplitHostPort(confer.Opts.TrafficInflow.BindAddress)
 	if err != nil {
-		return fmt.Errorf("Traffic Inflow bind address error:%v", err)
+		return fmt.Errorf("traffic Inflow bind address error:%v", err)
 	}
 	confer.Opts.MiscroServiceInfo.MetaData["mode"] = confer.Opts.TrafficInflow.BindProtocolType
 	confer.Opts.MiscroServiceInfo.EndPointAddress = fmt.Sprintf("%s://%s:%s", scheme, confer.Opts.MiscroServiceInfo.PodIP, port)

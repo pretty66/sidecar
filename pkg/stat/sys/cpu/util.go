@@ -20,7 +20,7 @@ func parseUint(s string) (uint64, error) {
 			intValue < 0 {
 			return 0, nil
 		}
-		return 0, errors.Wrapf(err, "os/stat: parseUint(%s) failed!", s)
+		return 0, errors.Wrapf(err, "os/stat: parseUint(%s) failed", s)
 	}
 	return v, nil
 }

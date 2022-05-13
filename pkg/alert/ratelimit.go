@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	RATE_LIMIT_TYPE_SERVICE = 1
-	RATE_LIMIT_TYPE_BBR     = 2
-	RATE_LIMIT_TYPE_CODEL   = 3
-	RATE_LIMIT_SERVICE      = "service distributed traffic limiting"
-	RATE_LIMIT_BBR          = "BBR current limiting"
-	RATE_LIMIT_CODEL        = "CODEL current limiting"
+	RateLimitTypeService = 1
+	RateLimitTypeBBR     = 2
+	RateLimitTypeCodel   = 3
+	RateLimitService     = "service distributed traffic limiting"
+	RateLimitBBR         = "BBR current limiting"
+	RateLimitCodel       = "CODEL current limiting"
 )
 
 type rateLimitAlertMsg struct {
@@ -27,14 +27,14 @@ type rateLimitAlertMsg struct {
 	EventTime   int64  `json:"event_time"`
 }
 
-func RateLimitAlert(uniqueID, hostname, serviceName string, err *errno.Errno) {
+func RateLimitAlert(uniqueID, hostname, serviceName string, err *errno.SCError) {
 	var limitType uint8
 	switch err.State {
-	case errno.LimiterError.State:
+	case errno.ErrLimiter.State:
 		limitType = 1
-	case errno.BbrLimiterError.State:
+	case errno.ErrBBRLimiter.State:
 		limitType = 2
-	case errno.CodelLimiterError.State:
+	case errno.ErrCodelLimiter.State:
 		limitType = 3
 	default:
 		return
@@ -47,18 +47,18 @@ func RateLimitAlert(uniqueID, hostname, serviceName string, err *errno.Errno) {
 		Type:        limitType,
 	}
 	recordRateLimitWarning(rs)
-	event.Client().Report(event.EVENT_TYPE_RATE_LIMIT, rs)
+	event.Client().Report(event.EventTypeRateLimit, rs)
 }
 
 func recordRateLimitWarning(params rateLimitAlertMsg) {
 	var eventMsg string
 	switch {
-	case params.Type == RATE_LIMIT_TYPE_SERVICE:
-		eventMsg = RATE_LIMIT_SERVICE
-	case params.Type == RATE_LIMIT_TYPE_BBR:
-		eventMsg = RATE_LIMIT_BBR
-	case params.Type == RATE_LIMIT_TYPE_CODEL:
-		eventMsg = RATE_LIMIT_CODEL
+	case params.Type == RateLimitTypeService:
+		eventMsg = RateLimitService
+	case params.Type == RateLimitTypeBBR:
+		eventMsg = RateLimitBBR
+	case params.Type == RateLimitTypeCodel:
+		eventMsg = RateLimitCodel
 	}
 	textLog := fmt.Sprintf(`Time of occurrence:%s;event:%s;service name:%s;unique_id:%s;hostname:%s;trigger rules:%s`,
 		time.Unix(0, params.EventTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05.000"),

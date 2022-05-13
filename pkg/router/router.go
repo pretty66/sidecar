@@ -31,7 +31,7 @@ const (
 )
 
 // flow traction topic structure
-type RouterRule struct {
+type Rule struct {
 	lock   sync.RWMutex
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -56,7 +56,7 @@ type RouterRule struct {
 type UniqueIDRule struct {
 	lastUpdateTime int64
 	entity         []*RuleEntity
-	conf           *RouterConfig
+	conf           *Config
 }
 
 // rules of the entity
@@ -72,8 +72,8 @@ func (r *RuleEntity) String() string {
 }
 
 // creating a route traction
-func InitRouterRedirect(ctx context.Context, enableWatch bool) *RouterRule {
-	direct := &RouterRule{
+func InitRouterRedirect(ctx context.Context, enableWatch bool) *Rule {
+	direct := &Rule{
 		ruleList:        map[string]UniqueIDRule{},
 		lastUpdateTimes: map[string]int64{},
 		enableWatch:     enableWatch,
@@ -83,7 +83,7 @@ func InitRouterRedirect(ctx context.Context, enableWatch bool) *RouterRule {
 	return direct
 }
 
-func (r *RouterRule) initMirror() {
+func (r *Rule) initMirror() {
 	r.shadowRequestQueue = make(chan *http.Request, 500)
 	r.httpClient = &http.Client{
 		Transport: &http.Transport{
@@ -101,7 +101,7 @@ func (r *RouterRule) initMirror() {
 	go r.sendShadowRequest()
 }
 
-func (r *RouterRule) ListenConfig() {
+func (r *Rule) ListenConfig() {
 	util.GoWithRecover(func() {
 		for {
 			select {
@@ -128,7 +128,7 @@ func (r *RouterRule) ListenConfig() {
 	}
 }
 
-func (r *RouterRule) listenConfig(count int) {
+func (r *Rule) listenConfig(count int) {
 	tick := time.NewTicker(time.Second * time.Duration(count))
 	defer tick.Stop()
 	for {
@@ -141,7 +141,7 @@ func (r *RouterRule) listenConfig(count int) {
 	}
 }
 
-func (r *RouterRule) listenConfigWithWatch() {
+func (r *Rule) listenConfigWithWatch() {
 	var f func()
 	f = func() {
 		util.GoWithRecover(func() {
@@ -177,7 +177,7 @@ func sleep() {
 	time.Sleep(10 * time.Second)
 }
 
-func (r *RouterRule) watchConfig(ctx context.Context) {
+func (r *Rule) watchConfig(ctx context.Context) {
 	subList := sc.Discovery().SubscribeAppID()
 	count := len(subList)
 	if count == 0 {
@@ -267,20 +267,20 @@ func (r *RouterRule) watchConfig(ctx context.Context) {
 	}
 }
 
-func (r *RouterRule) setUpdateTime(appid string, update int64) {
+func (r *Rule) setUpdateTime(appid string, update int64) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.lastUpdateTimes[appid] = update
 }
 
-func (r *RouterRule) getUpdateTime(appid string) (update int64, ok bool) {
+func (r *Rule) getUpdateTime(appid string) (update int64, ok bool) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 	update, ok = r.lastUpdateTimes[appid]
 	return
 }
 
-func (r *RouterRule) BatchGetRouterConfig() {
+func (r *Rule) BatchGetRouterConfig() {
 	subList := sc.Discovery().SubscribeAppID()
 	for _, uniqueID := range subList {
 		if uniqueID == "" {
@@ -294,11 +294,11 @@ func (r *RouterRule) BatchGetRouterConfig() {
 	}
 }
 
-func (r *RouterRule) getUniqueIDFromKey(key string) (uniqueID string) {
+func (r *Rule) getUniqueIDFromKey(key string) (uniqueID string) {
 	return strings.TrimPrefix(key, RouterConfigKeyPrefix)
 }
 
-func (r *RouterRule) pullRouterConfig(uniqueID string) (conf *RouterConfig) {
+func (r *Rule) pullRouterConfig(uniqueID string) (conf *Config) {
 	key := fmt.Sprintf(RouterConfigKey, uniqueID)
 	lastUpdateTime, err := rediscluster.Int64(sc.Redis().Do("HGET", key, RouterConfigUpdateField))
 	if err != nil {
@@ -332,11 +332,11 @@ func (r *RouterRule) pullRouterConfig(uniqueID string) (conf *RouterConfig) {
 		return
 	}
 	cilog.LogInfof(cilog.LogNameSidecar, "Induction flow configuration update:%s", string(data))
-	return
+	return conf
 }
 
-func (r *RouterRule) ConfigRuleInByte(uniqueID string, data []byte, lastUpdateTime int64) {
-	conf := new(RouterConfig)
+func (r *Rule) ConfigRuleInByte(uniqueID string, data []byte, lastUpdateTime int64) {
+	conf := new(Config)
 	err := json.Unmarshal(data, &conf)
 	if err != nil {
 		cilog.LogErrorw(cilog.LogNameSidecar, "json parsing traffic pulling configuration error", err)
@@ -347,7 +347,7 @@ func (r *RouterRule) ConfigRuleInByte(uniqueID string, data []byte, lastUpdateTi
 	r.ConfigRule(uniqueID, conf)
 }
 
-func (r *RouterRule) ConfigRule(uniqueID string, routerConfig *RouterConfig) {
+func (r *Rule) ConfigRule(uniqueID string, routerConfig *Config) {
 	r.lock.RLock()
 	_, ok := r.ruleList[uniqueID]
 	r.lock.RUnlock()
@@ -358,7 +358,7 @@ func (r *RouterRule) ConfigRule(uniqueID string, routerConfig *RouterConfig) {
 	r.createEntityRule(uniqueID, routerConfig, nil)
 }
 
-func (r *RouterRule) Has(uniqueID string) bool {
+func (r *Rule) Has(uniqueID string) bool {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
@@ -366,7 +366,7 @@ func (r *RouterRule) Has(uniqueID string) bool {
 	return ok
 }
 
-func (r *RouterRule) LastUpdateTime(uniqueID string) int64 {
+func (r *Rule) LastUpdateTime(uniqueID string) int64 {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
@@ -377,14 +377,14 @@ func (r *RouterRule) LastUpdateTime(uniqueID string) int64 {
 	return last.lastUpdateTime
 }
 
-func (r *RouterRule) ReloadEntityRule(uniqueID string, routers *RouterConfig) {
+func (r *Rule) ReloadEntityRule(uniqueID string, routers *Config) {
 	r.lock.Lock()
 	delete(r.ruleList, uniqueID)
 	r.lock.Unlock()
 	r.createEntityRule(uniqueID, routers, nil)
 }
 
-func (r *RouterRule) updateEntityRuleByDiscovery(uniqueID string, instanceList map[string][]*sesdk.Instance) {
+func (r *Rule) updateEntityRuleByDiscovery(uniqueID string, instanceList map[string][]*sesdk.Instance) {
 	r.lock.Lock()
 	conf := r.ruleList[uniqueID].conf
 	delete(r.ruleList, uniqueID)
@@ -392,7 +392,7 @@ func (r *RouterRule) updateEntityRuleByDiscovery(uniqueID string, instanceList m
 	r.createEntityRule(uniqueID, conf, instanceList)
 }
 
-func (r *RouterRule) createEntityRule(uniqueID string, routers *RouterConfig, instanceList map[string][]*sesdk.Instance) {
+func (r *Rule) createEntityRule(uniqueID string, routers *Config, instanceList map[string][]*sesdk.Instance) {
 	if instanceList == nil {
 		instanceList = sc.Discovery().AppIDInstances(uniqueID)
 	}
@@ -439,7 +439,7 @@ func (r *RouterRule) createEntityRule(uniqueID string, routers *RouterConfig, in
 	r.lock.Unlock()
 }
 
-func (r *RouterRule) deleteEntity(uniqueID string) {
+func (r *Rule) deleteEntity(uniqueID string) {
 	r.deleteErrorConfig(uniqueID)
 
 	if !r.Has(uniqueID) {
@@ -451,11 +451,11 @@ func (r *RouterRule) deleteEntity(uniqueID string) {
 	delete(r.ruleList, uniqueID)
 }
 
-func (r *RouterRule) addErrorConfig(uniqueID string, lastUpdateTime int64) {
+func (r *Rule) addErrorConfig(uniqueID string, lastUpdateTime int64) {
 	r.errorConfigList.Store(uniqueID, lastUpdateTime)
 }
 
-func (r *RouterRule) isErrorConfig(uniqueID string, lastUpdateTime int64) bool {
+func (r *Rule) isErrorConfig(uniqueID string, lastUpdateTime int64) bool {
 	if last, ok := r.errorConfigList.Load(uniqueID); ok {
 		if lastUpdateTime <= last.(int64) {
 			return true
@@ -465,11 +465,11 @@ func (r *RouterRule) isErrorConfig(uniqueID string, lastUpdateTime int64) bool {
 	return false
 }
 
-func (r *RouterRule) deleteErrorConfig(uniqueID string) {
+func (r *Rule) deleteErrorConfig(uniqueID string) {
 	r.errorConfigList.Delete(uniqueID)
 }
 
-func (r *RouterRule) sendShadowRequest() {
+func (r *Rule) sendShadowRequest() {
 	wg := sync.WaitGroup{}
 	for i := 0; i < 20; i++ {
 		wg.Add(1)
@@ -489,7 +489,7 @@ func (r *RouterRule) sendShadowRequest() {
 	wg.Wait()
 }
 
-func (r *RouterRule) sendReq(req *http.Request) {
+func (r *Rule) sendReq(req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), time.Second*5)
 	defer cancel()
 	resp, err := r.httpClient.Transport.RoundTrip(req.WithContext(ctx))

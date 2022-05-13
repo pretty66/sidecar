@@ -15,7 +15,7 @@ func (*FileSource) GetNetstat() (tcp map[string]int, err error) {
 	if len(socks) > 0 {
 		for _, value := range socks {
 			state := value.State.String()
-			tcp[state] += 1
+			tcp[state]++
 		}
 	}
 	return

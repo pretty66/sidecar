@@ -27,17 +27,17 @@ import (
 
 // Report microservice attribute information
 const (
-	RESOURCE_CPU_TYPE  = 1
-	RESOURCE_MEM_TYPE  = 2
-	RESOURCE_BOTH_TYPE = 3
+	ResourceCPUType  = 1
+	ResourceMemType  = 2
+	ResourceBothType = 3
 	// registry bottom alarm
-	RC_AGENT_BOTTOM_LINE_ALERT = 1
+	RCAgentBottomLineAlert = 1
 	// custom alarms for the registry
-	RC_AGENT_CUSTOM_ALERT = 2
+	RCAgentCustomAlert = 2
 	// sidecar alarm
-	SIDE_CAR_BOTTOM_LINE_ALERT = 3
+	SidecarBottomLineAlert = 3
 	// service alarm
-	SERVICE_BOTTOM_LINE_ALERT = 4
+	ServiceBottomLineAlert = 4
 
 	alertTypeService   = "service"
 	alertTypeSidecar   = "sidecar"
@@ -168,7 +168,7 @@ func (tp *TrafficProxy) microservicesAttributesHeartbeat() {
 
 	cpuTimes := time.Millisecond * 250
 	sideCarResourceHd := filesource.NewFileSource()
-	serviceResourceHd := httpsource.NewHttpSource(tp.Confer.Opts.BBR.RemoteResourceURL)
+	serviceResourceHd := httpsource.NewHTTPSource(tp.Confer.Opts.BBR.RemoteResourceURL)
 	attr.ServiceMemRequests, _ = strconv.Atoi(tp.Confer.Opts.MiscroServiceInfo.ServiceMemRequests)
 	attr.ServiceMemLimits, _ = strconv.Atoi(tp.Confer.Opts.MiscroServiceInfo.ServiceMemLimits)
 	attr.ServiceCPURequests, _ = strconv.Atoi(tp.Confer.Opts.MiscroServiceInfo.ServiceCPURequests)
@@ -375,7 +375,7 @@ func (tp *TrafficProxy) reportToRedis(attr *ServiceMonitorAttributes, scCPULimit
 			}
 
 			recordResourceWarning(data)
-			event.Client().Report(event.EVENT_TYPE_RESOURCE, data)
+			event.Client().Report(event.EventTypeResource, data)
 		}
 	}
 	if serviceCPULimit > 0 {
@@ -408,7 +408,7 @@ func (tp *TrafficProxy) reportToRedis(attr *ServiceMonitorAttributes, scCPULimit
 				EventTime:          time.Now().UnixNano() / 1e6,
 			}
 			recordResourceWarning(data)
-			event.Client().Report(event.EVENT_TYPE_RESOURCE, data)
+			event.Client().Report(event.EventTypeResource, data)
 		}
 	}
 }
@@ -532,29 +532,29 @@ func recordResourceWarning(alert MSPReportResource) {
 	memThreshold := utils.FloatToString(alert.MemThreshold) + "%"
 	var eventMsg, rule, alertType, resourceType string
 	switch {
-	case alert.AlertType == RC_AGENT_BOTTOM_LINE_ALERT:
+	case alert.AlertType == RCAgentBottomLineAlert:
 		eventMsg = "registry resource bottom alert"
-	case alert.AlertType == RC_AGENT_CUSTOM_ALERT:
+	case alert.AlertType == RCAgentCustomAlert:
 		eventMsg = "registry resources customize alerts"
-	case alert.AlertType == SIDE_CAR_BOTTOM_LINE_ALERT:
+	case alert.AlertType == SidecarBottomLineAlert:
 		eventMsg = "side car resource bottom of the line warning"
 		alertType = alertTypeSidecar
-	case alert.AlertType == SERVICE_BOTTOM_LINE_ALERT:
+	case alert.AlertType == ServiceBottomLineAlert:
 		eventMsg = "micro service resource bottom warning"
 		alertType = alertTypeService
 	}
 	if alert.CPU >= alert.CPUThreshold {
-		alert.ResourceType = RESOURCE_CPU_TYPE
+		alert.ResourceType = ResourceCPUType
 		resourceType = resourceTypeCPU
 		rule = fmt.Sprintf("current cpu: %s(core), threshold reached: %s(core), k8s set minimum value: %dm, k8s set maximum value: %dm", cpu, cpuThreshold, alert.ServiceCPURequests, alert.ServiceCPULimits)
 	}
 	if alert.Mem >= alert.MemThreshold {
-		alert.ResourceType = RESOURCE_MEM_TYPE
+		alert.ResourceType = ResourceMemType
 		resourceType = resourceTypeMemory
 		rule = fmt.Sprintf("current memory: %s, threshold reached: %s, k8s set minimum value: %dm, k8s set maximum value: %dm", mem, memThreshold, alert.ServiceMemRequests, alert.ServiceMemLimits)
 	}
 	if alert.CPU >= alert.CPUThreshold && alert.Mem >= alert.MemThreshold {
-		alert.ResourceType = RESOURCE_BOTH_TYPE
+		alert.ResourceType = ResourceBothType
 		resourceType = resourceTypeBoth
 		rule = fmt.Sprintf("current cpu: %s(core), threshold reached: %s(core), k8s set minimum value: %dm, k8s set maximum value: %dm; current memory: %s, threshold reached: %s, k8s set minimum value: %dm, k8s set maximum value: %dm",
 			cpu,

@@ -17,19 +17,19 @@ var diskAcctFiles = []string{
 	"/sys/fs/cgroup/blkio/blkio.throttle.io_service_bytes",
 }
 
-func (hs *HttpSource) CurrentDiskStat(interval time.Duration, callback resource.DiskStatCallback) {
+func (hs *HTTPSource) CurrentDiskStat(interval time.Duration, callback resource.DiskStatCallback) {
 	var readOld, writeOld uint64
 	var err error
 	if diskAcctFile == "" {
 		for _, file := range diskAcctFiles {
-			readOld, writeOld, _ = getDiskReadWrite(hs.remoteUrl, file)
+			readOld, writeOld, _ = getDiskReadWrite(hs.remoteURL, file)
 			if readOld+writeOld > 0 {
 				diskAcctFile = file
 				break
 			}
 		}
 	} else {
-		readOld, writeOld, err = getDiskReadWrite(hs.remoteUrl, diskAcctFile)
+		readOld, writeOld, err = getDiskReadWrite(hs.remoteURL, diskAcctFile)
 	}
 	if err != nil {
 		callback(nil, err)
@@ -40,14 +40,14 @@ func (hs *HttpSource) CurrentDiskStat(interval time.Duration, callback resource.
 		var readNew, writeNew uint64
 		if diskAcctFile == "" {
 			for _, file := range diskAcctFiles {
-				readNew, writeNew, _ = getDiskReadWrite(hs.remoteUrl, file)
+				readNew, writeNew, _ = getDiskReadWrite(hs.remoteURL, file)
 				if readNew+writeNew > 0 {
 					diskAcctFile = file
 					break
 				}
 			}
 		} else {
-			readNew, writeNew, err = getDiskReadWrite(hs.remoteUrl, diskAcctFile)
+			readNew, writeNew, err = getDiskReadWrite(hs.remoteURL, diskAcctFile)
 		}
 		if err != nil {
 			callback(nil, err)

@@ -17,7 +17,7 @@ const (
 	componentIDGOHttpServer = 5004
 	componentIDGOHttpClient = 5005
 
-	TagIdgAppId    = "idg.appid"
+	TagIdgAppID    = "idg.appid"
 	TagIdgAppKey   = "idg.appkey"
 	TagIdgChannel  = "idg.channel"
 	TagAsyncPubSub = "async.publish"
@@ -110,7 +110,7 @@ func (t *SkyTrace) Close() {
 
 func setIdgTag2Span(span go2sky.Span, skys *skySpan) {
 	if skys.idgAppID != "" {
-		span.Tag(TagIdgAppId, skys.idgAppID)
+		span.Tag(TagIdgAppID, skys.idgAppID)
 	}
 	if skys.idgAppKey != "" {
 		span.Tag(TagIdgAppKey, skys.idgAppKey)

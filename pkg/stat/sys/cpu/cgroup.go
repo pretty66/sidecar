@@ -108,44 +108,5 @@ func (c *cgroup) CPUSetCPUs() ([]uint64, error) {
 
 // CurrentcGroup get current process cgroup
 func currentcGroup() (*cgroup, error) {
-	//pid := os.Getpid()
-	//cgroupFile := fmt.Sprintf("/proc/%d/cgroup", pid)
-	//cgroupSet := make(map[string]string)
-	//fp, err := os.Open(cgroupFile)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//defer fp.Close()
-	//buf := bufio.NewReader(fp)
-	//for {
-	//	line, err := buf.ReadString('\n')
-	//	if err != nil {
-	//		if err == io.EOF {
-	//			break
-	//		}
-	//		return nil, err
-	//	}
-	//	col := strings.Split(strings.TrimSpace(line), ":")
-	//	if len(col) != 3 {
-	//		return nil, fmt.Errorf("invalid cgroup format %s", line)
-	//	}
-	//	dir := col[2]
-	//	// When dir is not equal to /, it must be in docker
-	//	if dir != "/" {
-	//		cgroupSet[col[1]] = path.Join(cgroupRootDir, col[1])
-	//		if strings.Contains(col[1], ",") {
-	//			for _, k := range strings.Split(col[1], ",") {
-	//				cgroupSet[k] = path.Join(cgroupRootDir, k)
-	//			}
-	//		}
-	//	} else {
-	//		cgroupSet[col[1]] = path.Join(cgroupRootDir, col[1], col[2])
-	//		if strings.Contains(col[1], ",") {
-	//			for _, k := range strings.Split(col[1], ",") {
-	//				cgroupSet[k] = path.Join(cgroupRootDir, k, col[2])
-	//			}
-	//		}
-	//	}
-	//}
 	return &cgroup{cgroupSet: cgroupSet}, nil
 }

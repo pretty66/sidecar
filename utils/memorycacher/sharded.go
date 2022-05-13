@@ -24,11 +24,10 @@ type unexportedShardedCache struct {
 }
 
 type shardedCache struct {
-	seed          uint32
-	m             uint32
-	cs            []*cache
-	lastCleanTime time.Time
-	janitor       *shardedJanitor
+	seed    uint32
+	m       uint32
+	cs      []*cache
+	janitor *shardedJanitor
 }
 
 // djb2 with better shuffling. 5x faster than FNV with the hash.Hash overhead.
@@ -132,13 +131,12 @@ type shardedJanitor struct {
 
 func (j *shardedJanitor) Run(sc *shardedCache) {
 	j.stop = make(chan bool)
-	tick := time.Tick(j.Interval)
+	tick := time.NewTicker(j.Interval)
 	for {
 		select {
-		case <-tick:
+		case <-tick.C:
 			sc.DeleteExpired()
 		case <-j.shoudClean:
-
 			sc.DeleteExpired()
 		case <-j.stop:
 			return
@@ -164,7 +162,7 @@ func newShardedCache(n int, de time.Duration, maxItemsCount int) *shardedCache {
 	rnd, err := rand.Int(rand.Reader, max)
 	var seed uint32
 	if err != nil {
-		os.Stderr.Write([]byte("WARNING: go-cache's newShardedCache failed to read from the system CSPRNG (/dev/urandom or equivalent.) Your system's security may be compromised. Continuing with an insecure seed.\n"))
+		_, _ = os.Stderr.Write([]byte("WARNING: go-cache's newShardedCache failed to read from the system CSPRNG (/dev/urandom or equivalent.) Your system's security may be compromised. Continuing with an insecure seed.\n"))
 		seed = insecurerand.Uint32()
 	} else {
 		seed = uint32(rnd.Uint64())

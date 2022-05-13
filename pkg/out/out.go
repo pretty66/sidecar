@@ -43,11 +43,11 @@ func HTTPJsonOutputByte(w http.ResponseWriter, code int, out []byte) error {
 
 func InflowHTTPJsonRequestError(w http.ResponseWriter, req *http.Request, code int, err error) error {
 	var body []byte
-	switch err.(type) {
-	case *errno.Errno:
-		body = err.(*errno.Errno).Encode()
+	switch eb := err.(type) {
+	case *errno.SCError:
+		body = eb.Encode()
 	default:
-		body = errno.RequestError.Add(err.Error()).Encode()
+		body = errno.ErrRequest.Add(err.Error()).Encode()
 		b, _ := httputil.DumpRequest(req, false)
 		cilog.LogErrorf(cilog.LogNameDefault, "request err: %v, package: \n[ %s ] ", err, string(b))
 	}
@@ -59,11 +59,12 @@ func InflowHTTPJsonRequestError(w http.ResponseWriter, req *http.Request, code i
 
 func HTTPJsonRequestError(w http.ResponseWriter, code int, err error) error {
 	var body []byte
-	switch err.(type) {
-	case *errno.Errno:
-		body = err.(*errno.Errno).Encode()
+
+	switch eb := err.(type) {
+	case *errno.SCError:
+		body = eb.Encode()
 	default:
-		body = errno.RequestError.Add(err.Error()).Encode()
+		body = errno.ErrRequest.Add(err.Error()).Encode()
 		cilog.LogErrorw(cilog.LogNameDefault, "request err ", err)
 	}
 	w.Header().Set("Content-Type", "application/json;")
@@ -73,7 +74,7 @@ func HTTPJsonRequestError(w http.ResponseWriter, code int, err error) error {
 }
 
 // traffic limiting error response
-func HTTPJsonRateLimitError(w http.ResponseWriter, code int, err *errno.Errno) error {
+func HTTPJsonRateLimitError(w http.ResponseWriter, code int, err *errno.SCError) error {
 	if err != nil {
 		_ = HTTPJsonRequestError(w, code, err)
 		alert.RateLimitAlert(confer.Global().Opts.MiscroServiceInfo.UniqueID, confer.Global().Opts.MiscroServiceInfo.Hostname, confer.Global().Opts.MiscroServiceInfo.ServiceName, err)
@@ -87,15 +88,15 @@ func HTTPJsonResponseError(ctx echo.Context, proxyArgs *confer.RemoteApp, err er
 	if err != nil {
 		var output []byte
 		switch e := err.(type) {
-		case *errno.Errno:
+		case *errno.SCError:
 			output = e.Encode()
 			errCode = e.State
 		default:
-			output = errno.ResponseError.Add(err.Error()).Encode()
-			errCode = errno.ResponseError.State
+			output = errno.ErrResponse.Add(err.Error()).Encode()
+			errCode = errno.ErrResponse.State
 		}
 		if ctx.Response().Size == 0 {
-			ctx.Response().Header().Set(confer.REQUEST_HEADER_CONTENT_TYPE, "application/json;")
+			ctx.Response().Header().Set(confer.RequestHeaderContentType, "application/json;")
 			ctx.Response().WriteHeader(ctx.Response().Status)
 			_, _ = ctx.Response().Write(output)
 		}
@@ -111,12 +112,12 @@ func HTTPJsonResponseError(ctx echo.Context, proxyArgs *confer.RemoteApp, err er
 	}
 
 	RequestErrorLogReport("", &RequestErrorLogReportContent{
-		TraceId:     util.GetTraceIDNetHTTP(ctx.Request().Header),
-		Url:         url,
+		TraceID:     util.GetTraceIDNetHTTP(ctx.Request().Header),
+		URL:         url,
 		ErrCode:     strconv.Itoa(errCode),
 		UniqueID:    proxyArgs.AppID,
 		Hostname:    proxyArgs.Hostname,
-		ContentType: ctx.Request().Header.Get(confer.REQUEST_HEADER_CONTENT_TYPE),
+		ContentType: ctx.Request().Header.Get(confer.RequestHeaderContentType),
 		Header:      proxyArgs.ExtraHeader,
 		ReqBody:     GetRequestBytes(ctx),
 		ResBody:     util.GetResponseBody(ctx.Response().Writer),
@@ -126,7 +127,7 @@ func HTTPJsonResponseError(ctx echo.Context, proxyArgs *confer.RemoteApp, err er
 	return nil
 }
 
-func HTTPResponseWaring(ctx echo.Context, proxyArgs *confer.RemoteApp, err *errno.Errno) {
+func HTTPResponseWaring(ctx echo.Context, proxyArgs *confer.RemoteApp, err *errno.SCError) {
 	if proxyArgs == nil {
 		proxyArgs = &confer.RemoteApp{}
 	}
@@ -136,12 +137,12 @@ func HTTPResponseWaring(ctx echo.Context, proxyArgs *confer.RemoteApp, err *errn
 	}
 
 	RequestWaringLogReport(&RequestErrorLogReportContent{
-		TraceId:     util.GetTraceIDNetHTTP(ctx.Request().Header),
-		Url:         url,
+		TraceID:     util.GetTraceIDNetHTTP(ctx.Request().Header),
+		URL:         url,
 		ErrCode:     strconv.Itoa(err.State),
 		UniqueID:    proxyArgs.AppID,
 		Hostname:    proxyArgs.Hostname,
-		ContentType: ctx.Request().Header.Get(confer.REQUEST_HEADER_CONTENT_TYPE),
+		ContentType: ctx.Request().Header.Get(confer.RequestHeaderContentType),
 		Header:      proxyArgs.ExtraHeader,
 		ReqBody:     GetRequestBytes(ctx),
 		ResBody:     util.GetResponseBody(ctx.Response().Writer),
@@ -157,11 +158,11 @@ func HTTPResponseWaringBodySize(ctx echo.Context, proxyArgs *confer.RemoteApp, b
 		url = proxyArgs.Scheme + "://" + proxyArgs.Host + url
 	}
 	body := &RequestErrorLogReportContent{
-		TraceId:     util.GetTraceIDNetHTTP(ctx.Request().Header),
-		Url:         url,
+		TraceID:     util.GetTraceIDNetHTTP(ctx.Request().Header),
+		URL:         url,
 		UniqueID:    proxyArgs.AppID,
 		Hostname:    proxyArgs.Hostname,
-		ContentType: ctx.Request().Header.Get(confer.REQUEST_HEADER_CONTENT_TYPE),
+		ContentType: ctx.Request().Header.Get(confer.RequestHeaderContentType),
 		Header:      proxyArgs.ExtraHeader,
 		ReqBody:     GetRequestBytes(ctx),
 	}
@@ -179,15 +180,15 @@ func HTTPResponseWaringBodySize(ctx echo.Context, proxyArgs *confer.RemoteApp, b
 		AppKey:     body.AppKey,
 		Channel:    body.Channel,
 		SubOrgKey:  body.SubOrgKey,
-		TraceID:    body.TraceId,
-		Url:        body.Url,
+		TraceID:    body.TraceID,
+		Url:        body.URL,
 		ErrCode:    body.ErrCode,
-		CustomLog1: body.AccountId,
+		CustomLog1: body.AccountID,
 	}, fmt.Sprintf("request response body is too large data size: %d kb ", bodyLen/1024)+string(b))
 }
 
 func GetRequestBytes(ctx echo.Context) []byte {
-	b, ok := ctx.Get(confer.REQUEST_BODY_KEY).([]byte)
+	b, ok := ctx.Get(confer.RequestBodyKey).([]byte)
 	if ok {
 		return b
 	}

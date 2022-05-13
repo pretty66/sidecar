@@ -68,7 +68,7 @@ func (f *CircuitBreaker) ExecuteCircuitBreakerNetHTTPMiddle(next echo.HandlerFun
 
 func (f *CircuitBreaker) ExecuteCircuitBreaker(uniqueID, hostname, path string) (func(bool), time.Duration, error) {
 	if uniqueID == "" || hostname == "" {
-		return nil, 0, errno.FuseError.Add(fmt.Sprintf("uniqueId:%s or hostname:%s null", uniqueID, hostname))
+		return nil, 0, errno.ErrFuse.Add(fmt.Sprintf("uniqueId:%s or hostname:%s null", uniqueID, hostname))
 	}
 	breaker, requestTimeout, ok := f.getGoBreaker(uniqueID, hostname, path)
 	if !ok {
@@ -76,7 +76,7 @@ func (f *CircuitBreaker) ExecuteCircuitBreaker(uniqueID, hostname, path string) 
 	}
 	done, err := breaker.Allow()
 	if err != nil {
-		return nil, 0, errno.FuseError.Add(err.Error())
+		return nil, 0, errno.ErrFuse.Add(err.Error())
 	}
 	return done, requestTimeout, nil
 }
@@ -138,7 +138,7 @@ func (f *CircuitBreaker) registerCircuitBreaker(uniqueID, hostname, path string)
 	defer upBreaker.Unlock()
 
 	var st gobreaker.Settings
-	if upBreaker.config.IsOpen == FUSE_ON {
+	if upBreaker.config.IsOpen == FuseOn {
 		st = gobreaker.Settings{
 			Name:          f.joinBreakerName(uniqueID, hostname),
 			MaxRequests:   upBreaker.config.MaxRequests,
@@ -276,7 +276,7 @@ func (f *CircuitBreaker) onStateChange(name string, from gobreaker.State, to gob
 		rs.Status = 2
 	}
 	recordFuseWarning(rs)
-	event.Client().Report(event.EVENT_TYPE_FUSE, rs)
+	event.Client().Report(event.EventTypeFuse, rs)
 }
 
 func (f *CircuitBreaker) getGoBreaker(uniqueID, hostname, path string) (*gobreaker.TwoStepCircuitBreaker, time.Duration, bool) {

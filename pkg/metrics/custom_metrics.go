@@ -35,7 +35,7 @@ type Metrics struct {
 	batchPoints        client.BatchPoints
 	point              chan *client.Point
 	flushTimer         *time.Ticker
-	influxDBHttpClient *influxdb.InfluxDBHttpClient
+	influxDBHttpClient *influxdb.HTTPClient
 	configChan         <-chan []byte
 }
 
@@ -305,7 +305,7 @@ func getFieldsAndTags(metricsData *metricsData) (fields map[string]interface{}, 
 			tags[key] = value
 		}
 	}
-	return
+	return fields, tags, err
 }
 
 func (mt *Metrics) worker() {

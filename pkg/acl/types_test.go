@@ -55,13 +55,13 @@ func TestNewAclRuleByConfig(t *testing.T) {
 		err          error
 	}{
 		{"a", "get", "/index", nil, nil},
-		{"b", "get", "/index", nil, errno.RequestForbidden},
+		{"b", "get", "/index", nil, errno.ErrRequestForbidden},
 		{"a", "post", "/index", nil, nil},
-		{"a", "delete", "/index", nil, errno.RequestForbidden},
-		{"a", "put", "/index", nil, errno.RequestForbidden},
-		{"a", "put", "putwqe", nil, errno.RequestForbidden},
+		{"a", "delete", "/index", nil, errno.ErrRequestForbidden},
+		{"a", "put", "/index", nil, errno.ErrRequestForbidden},
+		{"a", "put", "putwqe", nil, errno.ErrRequestForbidden},
 		{"a", "put", "/putwqe", nil, nil},
-		{"a", "put", "/header", nil, errno.RequestForbidden},
+		{"a", "put", "/header", nil, errno.ErrRequestForbidden},
 		{"a", "get", "/header", func(key string) (string, bool) {
 			header := map[string]string{
 				"cookie":          "1312123",

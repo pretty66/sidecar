@@ -15,7 +15,7 @@ type Matchable interface {
 }
 
 // control plane configuration parameters
-type RouterConfig struct {
+type Config struct {
 	ToUniqueID string   `json:"to_unique_id"` // can not be empty
 	Timestamp  int64    `json:"timestamp"`    // Last update time, 13-digit millisecond timestamp
 	Routers    []Router `json:"routers"`      // Internal at least one router configuration
@@ -81,7 +81,7 @@ type KeyValueData struct {
 	Value StringMatch
 }
 
-func (r *RouterConfig) String() string {
+func (r *Config) String() string {
 	return string(util.JSONEncode(r))
 }
 

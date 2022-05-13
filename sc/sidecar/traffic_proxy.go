@@ -39,7 +39,7 @@ type TrafficProxy struct {
 	BBRLimiter            ratelimit.Limiter
 	CaVerify              *ca.CertStatus
 	Metrics               *metrics.Metrics
-	Router                *router.RouterRule
+	Router                *router.Rule
 	State                 *network.RequestStats
 }
 

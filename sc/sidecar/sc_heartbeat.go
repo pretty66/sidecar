@@ -17,11 +17,11 @@ import (
 )
 
 const (
-	HEART_BEAT_STATUS_ON  = 1
-	HEART_BEAT_STATUS_OFF = 2
-	HEART_BEAT_ON         = "Service online"
-	HEART_BEAT_OFF        = "Service offline"
-	StartSilenceTime      = 30
+	HeartBeatStatusOn  = 1
+	HeartBeatStatusOff = 2
+	HeartBeatOn        = "Service online"
+	HeartBeatOff       = "Service offline"
+	StartSilenceTime   = 30
 )
 
 type heartbeatAlert struct {
@@ -76,7 +76,7 @@ func (tp *TrafficProxy) heartbeat(ins *sesdk.Instance) {
 			}
 
 			recordHeartBeatWarning(ha)
-			event.Client().Report(event.EVENT_TYPE_HEARTBEAT, ha)
+			event.Client().Report(event.EventTypeHeartbeat, ha)
 			return
 		}
 		if count.ConsecutiveFailures >= tp.Confer.Opts.Heartbeat.ConsecutiveFailures && ins.Status == discovery.InstanceStatusReceive {
@@ -94,7 +94,7 @@ func (tp *TrafficProxy) heartbeat(ins *sesdk.Instance) {
 				EventTime:   time.Now().UnixNano() / 1e6,
 			}
 			recordHeartBeatWarning(ha)
-			event.Client().Report(event.EVENT_TYPE_HEARTBEAT, ha)
+			event.Client().Report(event.EventTypeHeartbeat, ha)
 			return
 		}
 		if !is || err != nil {
@@ -113,10 +113,10 @@ func (tp *TrafficProxy) heartbeat(ins *sesdk.Instance) {
 func recordHeartBeatWarning(params heartbeatAlert) {
 	var eventMsg string
 
-	if params.Status == HEART_BEAT_STATUS_ON {
-		eventMsg = HEART_BEAT_ON
-	} else if params.Status == HEART_BEAT_STATUS_OFF {
-		eventMsg = HEART_BEAT_OFF
+	if params.Status == HeartBeatStatusOn {
+		eventMsg = HeartBeatOn
+	} else if params.Status == HeartBeatStatusOff {
+		eventMsg = HeartBeatOff
 	}
 
 	textLog := fmt.Sprintf(`Time of occurrence::%s;event:%s;service name:%s;unique_id:%s;hostname: %s`,
@@ -126,9 +126,9 @@ func recordHeartBeatWarning(params heartbeatAlert) {
 		params.UniqueID,
 		params.Hostname,
 	)
-	if params.Status == HEART_BEAT_STATUS_ON {
+	if params.Status == HeartBeatStatusOn {
 		cilog.LogInfof(cilog.LogNameSidecar, textLog)
-	} else if params.Status == HEART_BEAT_STATUS_OFF {
+	} else if params.Status == HeartBeatStatusOff {
 		cilog.LogError(cilog.LogNameSidecar, textLog)
 	}
 }

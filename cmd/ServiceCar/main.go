@@ -38,7 +38,7 @@ func main() {
 
 	app.Name = os.Getenv("MSP_SERVICE_TYPE")
 	if app.Name == "" {
-		app.Name = confer.SERVICE_TYPE_SIDECAR
+		app.Name = confer.ServiceTypeSidecar
 	}
 
 	app.Flags = []cli.Flag{
@@ -86,7 +86,7 @@ func main() {
 		}
 		var tp *sidecar.TrafficProxy
 		switch conf.Opts.ServiceType {
-		case confer.SERVICE_TYPE_SIDECAR:
+		case confer.ServiceTypeSidecar:
 			tp = &sidecar.TrafficProxy{SC: serviceCar}
 			initFunc = append(initFunc,
 				tp.LoadConfigByUniqueID,
@@ -101,7 +101,7 @@ func main() {
 				serviceCar.StartRemoteConfigFetcher,
 				tp.StartRouterConfigFetcher,
 			)
-		case confer.SERVICE_TYPE_GATEWAY:
+		case confer.ServiceTypeGateway:
 		default:
 			panic("run service type error:" + conf.Opts.ServiceType)
 		}

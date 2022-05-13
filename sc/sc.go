@@ -41,8 +41,8 @@ type SC struct {
 	Discovery          *discovery.Discovery
 	Instance           *sesdk.Instance
 	DiscoveryTLSConfig *tls.Config
-	InfluxDBUDPClient  *influxdb.InfluxDBUDPClient
-	InfluxDBHttpClient *influxdb.InfluxDBHttpClient
+	InfluxDBUDPClient  *influxdb.UDPClient
+	InfluxDBHttpClient *influxdb.HTTPClient
 
 	Exchanger  *caclient.Exchanger
 	ShutdownWg sync.WaitGroup
@@ -170,7 +170,7 @@ func (sc *SC) LoadBasics() (err error) {
 			},
 			sc.Confer.Opts.InfluxDBConf,
 		)
-		sc.InfluxDBHttpClient = &influxdb.InfluxDBHttpClient{Client: httpClient, BatchPointsConfig: bpc}
+		sc.InfluxDBHttpClient = &influxdb.HTTPClient{Client: httpClient, BatchPointsConfig: bpc}
 		if _, _, err := sc.InfluxDBHttpClient.Client.Ping(10 * time.Second); err != nil {
 			cilog.LogErrorw(cilog.LogNameSidecar, "ping influxdb failed", err)
 		}

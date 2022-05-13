@@ -49,7 +49,7 @@ func NetHTTPRuleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (fv *FlowVerification) NetHTTPRuleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		fromUniqueID := ctx.Request().Header.Get(confer.REQUEST_HEADER_FROM_UNIQUEID)
+		fromUniqueID := ctx.Request().Header.Get(confer.RequestHeaderFromUniqueID)
 		err := fv.Verify(fromUniqueID, ctx.Request().Method, ctx.Request().URL.Path, func(key string) (string, bool) {
 			h := ctx.Request().Header.Get(key)
 			return h, h != ""
@@ -68,7 +68,7 @@ func (fv *FlowVerification) Verify(fromUniqueID, method, path string, head Heade
 		return nil
 	}
 	if len(fromUniqueID) == 0 {
-		return errno.RequestForbidden
+		return errno.ErrRequestForbidden
 	}
 	return fv.rule.Verify(fromUniqueID, method, path, head)
 }

@@ -32,11 +32,11 @@ func NewACLRuleByConfig(conf []byte) (*Rules, error) {
 		return nil, fmt.Errorf("acl rule resolution error：%s, %v", string(conf), err)
 	}
 	if len(arule.Sources) == 0 {
-		return nil, fmt.Errorf("The ACL rule is incorrectly configured: Source must be configured！=> %s", string(conf))
+		return nil, fmt.Errorf("the ACL rule is incorrectly configured: Source must be configured！=> %s", string(conf))
 	}
 	for k := range arule.Rules {
 		if !utils.InArray(arule.Rules[k].Kind, _supportKind) {
-			return nil, fmt.Errorf("The ACL rule is incorrectly configured: KIND is not supported！=> %s", string(conf))
+			return nil, fmt.Errorf("the ACL rule is incorrectly configured: KIND is not supported！=> %s", string(conf))
 		}
 		for i := range arule.Rules[k].Matches {
 			hm, err := NewHTTPMatch(arule.Rules[k].Matches[i])
@@ -60,7 +60,7 @@ type HTTPMatch struct {
 
 func NewHTTPMatch(hm *HTTPMatch) (*HTTPMatch, error) {
 	if len(hm.Methods) == 0 && len(hm.PathRegex) == 0 && len(hm.Headers) == 0 {
-		return nil, fmt.Errorf("The ACL matching rule is incorrectly configured, and all configuration items are empty！")
+		return nil, fmt.Errorf("the ACL matching rule is incorrectly configured, and all configuration items are empty")
 	}
 	if len(hm.Methods) == 1 && hm.Methods[0] == "*" {
 		hm.Methods = hm.Methods[:0]
@@ -94,16 +94,16 @@ func (hm *HTTPMatch) String() string {
 
 func (hm *HTTPMatch) Matches(requestPath, method string, header HeaderFunc) error {
 	if len(hm.Methods) > 0 && !utils.InArray(strings.ToUpper(method), hm.Methods) {
-		return errno.RequestForbidden
+		return errno.ErrRequestForbidden
 	}
 	if hm.pRegex != nil && !hm.pRegex.MatchString(requestPath) {
-		return errno.RequestForbidden
+		return errno.ErrRequestForbidden
 	}
 	if len(hm.headRegex) > 0 {
 		for k := range hm.headRegex {
 			val, ok := header(strings.ToLower(k))
 			if !ok || !hm.headRegex[k].MatchString(val) {
-				return errno.RequestForbidden
+				return errno.ErrRequestForbidden
 			}
 		}
 	}
@@ -118,7 +118,7 @@ func (sm SourceMatch) CheckAllow(source string) bool {
 
 func (ar *Rules) Verify(fromUniqueID, method, path string, head HeaderFunc) error {
 	if !ar.Sources.CheckAllow(fromUniqueID) {
-		return errno.RequestForbidden
+		return errno.ErrRequestForbidden
 	}
 	if len(ar.Rules) == 0 {
 		return nil
@@ -130,5 +130,5 @@ func (ar *Rules) Verify(fromUniqueID, method, path string, head HeaderFunc) erro
 			}
 		}
 	}
-	return errno.RequestForbidden
+	return errno.ErrRequestForbidden
 }

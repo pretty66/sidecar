@@ -1,10 +1,3 @@
-/*
- * @Author: gitsrc
- * @Date: 2020-09-10 10:57:55
- * @LastEditors: gitsrc
- * @LastEditTime: 2020-09-10 20:19:47
- * @FilePath: /ServiceCar_CI/pkg/stat/metric/iterator.go
- */
 package metric
 
 import "fmt"

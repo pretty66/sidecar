@@ -3,12 +3,10 @@ package confer
 import "net/http"
 
 const (
-	REQUEST_HEADER_FROM_UNIQUEID = "x-from-uniqueid"
-	REQUEST_HEADER_CONTENT_TYPE  = "content-type"
+	RequestHeaderFromUniqueID = "x-from-uniqueid"
+	RequestHeaderContentType  = "content-type"
 
-	REQUEST_BODY_KEY = "request_body"
-
-	MSP_SERVICE_RULE_REDIS_KEY = "msp:service_rule:%s"
+	RequestBodyKey = "request_body"
 
 	// trace Data size limit
 	MaxTraceDataSize = 512 * 1024

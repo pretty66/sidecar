@@ -7,7 +7,7 @@ import (
 )
 
 func TestJsonRouterConfig(t *testing.T) {
-	conf := &RouterConfig{
+	conf := &Config{
 		ToUniqueID: "sidecar.proxy",
 		Timestamp:  time.Now().Unix() / 1e6,
 		Routers: []Router{

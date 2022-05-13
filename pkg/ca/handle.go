@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	CA_CERT_STATUS_REDIS_FIELD_KEY = "ca"
-	CA_CERT_FORBID                 = "forbid"
-	CA_CERT_RECOVER                = "recover"
+	CaCertStatusRedisFieldKey = "ca"
+	CaCertForbid              = "forbid"
+	CaCertRecover             = "recover"
 )
 
 type CertStatus struct {
@@ -30,7 +30,7 @@ type CertStatus struct {
 func (cs *CertStatus) HTTPCertStatusVerify(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if !cs.status.Load().(bool) {
-			return out.HTTPJsonOutputByte(c.Response(), http.StatusOK, errno.CaCertRevoke.Add("Ocsp authentication failed and the certificate was revoked. Procedure").Encode())
+			return out.HTTPJsonOutputByte(c.Response(), http.StatusOK, errno.ErrCaCertRevoke.Add("Ocsp authentication failed and the certificate was revoked. Procedure").Encode())
 		}
 		return next(c)
 	}
@@ -40,8 +40,8 @@ func InitCaCertStatusVerify(sidecar *sc.SC) *CertStatus {
 	cs := &CertStatus{}
 	cs.status.Store(true)
 
-	cs.configChan = sidecar.RegisterConfigWatcher(CA_CERT_STATUS_REDIS_FIELD_KEY, func(key, value []byte) bool {
-		return string(key) == CA_CERT_STATUS_REDIS_FIELD_KEY
+	cs.configChan = sidecar.RegisterConfigWatcher(CaCertStatusRedisFieldKey, func(key, value []byte) bool {
+		return string(key) == CaCertStatusRedisFieldKey
 	}, 1)
 	cs.listenStatusChange()
 	return cs
@@ -53,25 +53,25 @@ func (cs *CertStatus) listenStatusChange() {
 			if len(v) == 0 {
 				continue
 			}
-			if !util.InArray(string(v), []string{CA_CERT_FORBID, CA_CERT_RECOVER}) {
+			if !util.InArray(string(v), []string{CaCertForbid, CaCertRecover}) {
 				continue
 			}
 			// true == recover
-			if cs.status.Load().(bool) && string(v) == CA_CERT_RECOVER {
+			if cs.status.Load().(bool) && string(v) == CaCertRecover {
 				continue
 			}
 			// false == forbid
-			if !cs.status.Load().(bool) && string(v) == CA_CERT_FORBID {
+			if !cs.status.Load().(bool) && string(v) == CaCertForbid {
 				continue
 			}
 
 			cilog.LogWarnf(cilog.LogNameSidecar, "CA certificate status changed to：%s", string(v))
-			cs.status.Store(string(v) == CA_CERT_RECOVER)
+			cs.status.Store(string(v) == CaCertRecover)
 
 			switch string(v) {
-			case CA_CERT_RECOVER:
+			case CaCertRecover:
 				caclient.AllowOcspRequests()
-			case CA_CERT_FORBID:
+			case CaCertForbid:
 				caclient.BlockOcspRequests()
 			}
 		}
