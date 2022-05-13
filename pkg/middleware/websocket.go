@@ -47,15 +47,15 @@ func NetHTTPWebsocketProxy(globalCtx context.Context, targetAddr string) func(ec
 				return nil
 			}
 			defer conn.Close()
-			errChan := make(chan error, 2)
+			stop := make(chan struct{}, 2)
 			copyConn := func(a, b net.Conn) {
-				_, err := io.Copy(a, b)
-				errChan <- err
+				_, _ = io.Copy(a, b)
+				stop <- struct{}{}
 			}
 			go copyConn(conn, remoteConn) // response
 			go copyConn(remoteConn, conn) // request
 			select {
-			case err = <-errChan:
+			case <-stop:
 			case <-globalCtx.Done():
 			}
 			return nil

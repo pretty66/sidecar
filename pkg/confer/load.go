@@ -108,8 +108,8 @@ func InitConfig(serviceType, confFileURI, version string) (*Confer, error) {
 
 	// ---- log ---- // 192.168.2.80:9822
 	if conf.Opts.Log.OutPut == "redis" {
-		host, port, err := net.SplitHostPort(conf.Opts.Log.RedisHost)
-		if err != nil {
+		host, port, e := net.SplitHostPort(conf.Opts.Log.RedisHost)
+		if e != nil {
 			panic(fmt.Errorf("redishost parse err: %s, %v", conf.Opts.Log.RedisHost, err))
 		}
 		conf.Opts.Log.RedisHost = host
@@ -140,8 +140,8 @@ func InitConfig(serviceType, confFileURI, version string) (*Confer, error) {
 	// ----- discovery end
 
 	if len(conf.Opts.MiscroServiceInfo.Hostname) == 0 {
-		hostTemp, err := os.Hostname()
-		if err == nil {
+		hostTemp, e := os.Hostname()
+		if e == nil {
 			conf.Opts.MiscroServiceInfo.Hostname = hostTemp
 		}
 	}

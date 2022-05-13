@@ -14,18 +14,18 @@ func GetRollingPolicy() *RollingPolicy {
 
 func Handler(t *testing.T, table []map[string][]int) {
 	for _, hm := range table {
-		var totalTs, lastOffset int
+		var totalTS, lastOffset int
 		offsetAndPoints := hm["offsetAndPoints"]
 		timeSleep := hm["timeSleep"]
 		policy := GetRollingPolicy()
 		for i, n := range timeSleep {
-			totalTs += n
+			totalTS += n
 			time.Sleep(time.Duration(n) * time.Millisecond)
 			policy.Add(1)
 			offset, points := offsetAndPoints[2*i], offsetAndPoints[2*i+1]
 
 			if int(policy.window.window[offset].Points[0]) != points {
-				t.Errorf("error, time since last append: %vms, last offset: %v", totalTs, lastOffset)
+				t.Errorf("error, time since last append: %vms, last offset: %v", totalTS, lastOffset)
 			}
 			lastOffset = offset
 		}

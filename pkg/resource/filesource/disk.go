@@ -10,7 +10,7 @@ import (
 	"github.com/openmsp/sidecar/pkg/resource"
 )
 
-func (*FileSource) CurrentDiskStat(interval time.Duration, callback resource.DiskStatCallback) {
+func (fs *FileSource) CurrentDiskStat(interval time.Duration, callback resource.DiskStatCallback) {
 	var readOld, writeOld uint64
 	var err error
 	if diskAcctFile == "" {

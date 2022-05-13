@@ -32,7 +32,7 @@ var (
 	ErrNoCPUTick               = fmt.Errorf("no cpu tick")
 )
 
-func (cf *FileSource) GetCPUStat(interval time.Duration, callback resource.CPUStatCallback) {
+func (fs *FileSource) GetCPUStat(interval time.Duration, callback resource.CPUStatCallback) {
 	if cpuTick == 0 {
 		callback(nil, ErrNoCPUTick)
 		return
@@ -259,6 +259,6 @@ func getLimitedCoreCountFromCPUSet() (float64, error) {
 	return float64(cores), nil
 }
 
-func (*FileSource) GetCPUCount() float64 {
+func (fs *FileSource) GetCPUCount() float64 {
 	return limitedCoreCount
 }

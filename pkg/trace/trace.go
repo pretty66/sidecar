@@ -232,15 +232,9 @@ func (t *Trace) stopApm() {
 	}
 }
 
-func (t *Trace) init() {
-}
-
 // never return nil
 func (t *Trace) GetSky() *SkyTrace {
 	return t.sky
-}
-
-func (t *Trace) dynamicConfig() {
 }
 
 func (t *Trace) IsClosed() bool {

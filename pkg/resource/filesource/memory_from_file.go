@@ -24,11 +24,11 @@ func NewFileSource() resource.Resource {
 	return res
 }
 
-func (res *FileSource) InitSuccess() bool {
+func (fs *FileSource) InitSuccess() bool {
 	return limitedCoreCount > 0
 }
 
-func (mf *FileSource) CurrentMemStat() (stat *resource.MemStat, err error) {
+func (fs *FileSource) CurrentMemStat() (stat *resource.MemStat, err error) {
 	var m map[string]uint64
 	m, err = resource.ReadMapFromFile("/sys/fs/cgroup/memory/memory.stat")
 	if err != nil {

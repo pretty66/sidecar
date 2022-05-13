@@ -168,8 +168,8 @@ func (c *Client) ConnectProxy() error {
 		if c.e == nil {
 			return errors.New("need mtls to redis but ca not enabled")
 		}
-		generator, err := c.e.ClientTLSConfig("")
-		if err != nil {
+		generator, e := c.e.ClientTLSConfig("")
+		if e != nil {
 			return err
 		}
 		tlsc = generator.TLSConfig()

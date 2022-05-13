@@ -175,7 +175,7 @@ func GetPort(host string) string {
 }
 
 func GetResponseBody(w http.ResponseWriter) []byte {
-	b, ok := w.(*bodyBuffer.BodyWriter)
+	b, ok := w.(*bodybuffer.BodyWriter)
 	if !ok {
 		return nil
 	}

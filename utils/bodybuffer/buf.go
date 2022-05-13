@@ -1,4 +1,4 @@
-package bodyBuffer
+package bodybuffer
 
 import (
 	"bytes"

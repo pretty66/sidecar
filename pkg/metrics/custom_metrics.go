@@ -3,17 +3,14 @@ package metrics
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"github.com/openmsp/sidecar/pkg/autoredis"
 	"github.com/openmsp/sidecar/pkg/confer"
 	"github.com/openmsp/sidecar/pkg/out"
 	"github.com/openmsp/sidecar/sc"
@@ -35,12 +32,10 @@ const (
 type Metrics struct {
 	whatData
 	conf               confer.InfluxDBConfig
-	redisCluster       autoredis.AutoClient
 	batchPoints        client.BatchPoints
 	point              chan *client.Point
 	flushTimer         *time.Ticker
 	influxDBHttpClient *influxdb.InfluxDBHttpClient
-	counter            uint64
 	configChan         <-chan []byte
 }
 
@@ -157,9 +152,8 @@ func (mt *Metrics) handleContentTypeJSON(body []byte) (response *Response) {
 		return
 	}
 	fields := make(map[string]interface{})
-	tags := make(map[string]string)
 	fields["result"] = metricsData.Result
-	tags = metricsData.Meta
+	tags := metricsData.Meta
 	pt, err := client.NewPoint(metricsData.What, tags, fields, time.Now())
 	if err != nil {
 		response.State = -1
@@ -240,13 +234,11 @@ func (mt *Metrics) UpdateWhatsAndHash(whatData *whatData) {
 	mt.Lock()
 	defer mt.Unlock()
 	if whatData == nil {
-
 		mt.What = nil
 		mt.Timestamp = 0
 		return
 	}
 	if whatData.Timestamp > mt.Timestamp {
-
 		mt.What = whatData.What
 		mt.Timestamp = whatData.Timestamp
 	}
@@ -368,8 +360,9 @@ func parseDataText(data []byte) (metricsData *metricsData, err error) {
 		valueSli := strings.Split(strings.TrimSpace(value), "=")
 		if len(valueSli) >= 2 {
 			if strings.TrimSpace(valueSli[0]) == "meta" {
-				metaMap, err := util.JSONToMap(valueSli[1])
-				if err != nil {
+				metaMap, e := util.JSONToMap(valueSli[1])
+				if e != nil {
+					err = e
 					cilog.LogErrorw(cilog.LogNameSidecar, "custom-influxdb parseData err", err)
 					return nil, err
 				}
@@ -385,11 +378,4 @@ func parseDataText(data []byte) (metricsData *metricsData, err error) {
 		cilog.LogErrorw(cilog.LogNameSidecar, "json.Unmarshal err", err)
 	}
 	return
-}
-
-func (mt *Metrics) count() {
-	for {
-		time.Sleep(time.Second)
-		fmt.Println("Counter：", atomic.LoadUint64(&mt.counter))
-	}
 }

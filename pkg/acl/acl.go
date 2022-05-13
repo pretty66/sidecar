@@ -18,7 +18,7 @@ import (
 )
 
 type FlowVerification struct {
-	rule       *AclRules
+	rule       *Rules
 	rlock      sync.RWMutex
 	configChan <-chan []byte
 }
@@ -89,7 +89,7 @@ func (fv *FlowVerification) listenChanges() {
 	}
 }
 
-func (fv *FlowVerification) reload(r *AclRules) {
+func (fv *FlowVerification) reload(r *Rules) {
 	fv.rlock.Lock()
 	fv.rule = r
 	fv.rlock.Unlock()

@@ -24,7 +24,7 @@ type RouterConfig struct {
 // A specific url rule matches a specific target
 type Router struct {
 	// can not be empty
-	Match RouterMatch `json:"match"`
+	Match Match `json:"match"`
 	// Traffic pulling at least one route
 	Routes []Route `json:"routes"`
 	// Traffic mirroring
@@ -46,7 +46,7 @@ type Route struct {
 // only the configuration with the higher priority will take effect.
 // There is an and relationship between attributes,
 // which must be satisfied at the same time to be considered a successful match
-type RouterMatch struct {
+type Match struct {
 	Methods []string        `json:"methods"`
 	Prefix  string          `json:"prefix,omitempty"`
 	Path    string          `json:"path,omitempty"`
@@ -156,7 +156,7 @@ func createHTTPHeaderMatcher(header []HeaderMatcher) commonHeaderMatcherImpl {
 	return match
 }
 
-func NewMatches(match RouterMatch) (Matchable, error) {
+func NewMatches(match Match) (Matchable, error) {
 	var matchable Matchable
 	switch {
 	case match.Prefix != "":

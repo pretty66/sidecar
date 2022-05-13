@@ -32,6 +32,9 @@ func GetNewConfer(serviceType, confFileURI string) (confer *Confer, err error) {
 	}
 	confer = &Confer{}
 	confer.Opts, err = parseYamlFromFile(confFileURI)
+	if err != nil {
+		return nil, err
+	}
 	confer.Opts.ServiceType = serviceType
 
 	confer.replaceByEnv(&confer.Opts.TrafficInflow.BindProtocolType)
@@ -45,7 +48,7 @@ func GetNewConfer(serviceType, confFileURI string) (confer *Confer, err error) {
 		}
 		confer.Opts.TrafficInflow.TargetAddress = strings.Trim(addr, "/ ")
 	} else {
-		_, _, err := net.SplitHostPort(confer.Opts.TrafficInflow.TargetAddress)
+		_, _, err = net.SplitHostPort(confer.Opts.TrafficInflow.TargetAddress)
 		if err != nil {
 			confer.Opts.TrafficInflow.TargetAddress = "127.0.0.1:80"
 		}
@@ -95,7 +98,8 @@ func GetNewConfer(serviceType, confFileURI string) (confer *Confer, err error) {
 
 	// ---- log ---- // 192.168.2.80:9822
 	if logHost := os.Getenv(confer.Opts.Log.RedisHost); len(logHost) > 0 {
-		host, port, err := net.SplitHostPort(logHost)
+		var host, port string
+		host, port, err = net.SplitHostPort(logHost)
 		if err != nil {
 			panic(err)
 		}
@@ -146,7 +150,8 @@ func GetNewConfer(serviceType, confFileURI string) (confer *Confer, err error) {
 	confer.replaceByEnv(&confer.Opts.MiscroServiceInfo.Hostname)
 
 	if len(confer.Opts.MiscroServiceInfo.Hostname) == 0 {
-		hostTemp, err := os.Hostname()
+		var hostTemp string
+		hostTemp, err = os.Hostname()
 		if err == nil {
 			confer.Opts.MiscroServiceInfo.Hostname = hostTemp
 		}
@@ -172,12 +177,12 @@ func GetNewConfer(serviceType, confFileURI string) (confer *Confer, err error) {
 	confer.replaceByEnv(&confer.Opts.MiscroServiceInfo.ServiceName)
 	confer.Opts.MiscroServiceInfo.MetaData["service_name"] = confer.Opts.MiscroServiceInfo.ServiceName
 	if si, ok := confer.Opts.MiscroServiceInfo.MetaData["service_image"]; ok {
-		if si := os.Getenv(si); len(si) > 0 {
+		if si = os.Getenv(si); len(si) > 0 {
 			confer.Opts.MiscroServiceInfo.MetaData["service_image"] = si
 		}
 	}
 	if gu, ok := confer.Opts.MiscroServiceInfo.MetaData["service_gateway_addr"]; ok {
-		if gu := os.Getenv(gu); len(gu) > 0 {
+		if gu = os.Getenv(gu); len(gu) > 0 {
 			confer.Opts.MiscroServiceInfo.MetaData["service_gateway_addr"] = gu
 		} else {
 			delete(confer.Opts.MiscroServiceInfo.MetaData, "service_gateway_addr")

@@ -29,7 +29,7 @@ func InitBodyLimit(cloneBodySize int) {
 		return &bytes.Buffer{}
 	}
 	responseBodyPool.New = func() interface{} {
-		return bodyBuffer.NewBodWriter(int(maxCloneBodySize))
+		return bodybuffer.NewBodWriter(int(maxCloneBodySize))
 	}
 }
 
@@ -49,7 +49,7 @@ func EchoBodyLogMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			}()
 		}
 		// response body
-		buf := responseBodyPool.Get().(*bodyBuffer.BodyWriter)
+		buf := responseBodyPool.Get().(*bodybuffer.BodyWriter)
 		buf.ResponseWriter = ctx.Response().Writer
 		ctx.Response().Writer = buf
 		defer func() {

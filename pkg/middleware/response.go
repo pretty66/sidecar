@@ -27,7 +27,7 @@ func NetHTTPResponseHandle(next echo.HandlerFunc) echo.HandlerFunc {
 			res := util.GetResponseBody(ctx.Response().Writer)
 			if len(res) > 0 && gjson.ValidBytes(res) {
 				state := gjson.GetBytes(res, "state").String()
-				if "" != state && "1" != state {
+				if state != "1" {
 					app := ctx.Get(confer.AppInfoKey).(*confer.RemoteApp)
 					out.HTTPResponseWaring(ctx, app, errno.TargetResponseWaring)
 				}

@@ -87,7 +87,7 @@ func getAvailableEndpoint(uniqueID string) (host, hostname, scheme string, isRet
 			return
 		}
 		if ep.Total <= forNum {
-			err = errors.New("target service is not available.")
+			err = errors.New("target service is not available")
 			return
 		}
 		forNum++

@@ -217,7 +217,7 @@ func (l *BBR) Stat() Stat {
 func (l *BBR) Allow(ctx context.Context, opts ...ratelimit.AllowOption) (func(info ratelimit.DoneInfo), error) {
 	allowOpts := ratelimit.DefaultAllowOpts()
 	for _, opt := range opts {
-		opt.Apply(&allowOpts)
+		opt.Apply(allowOpts)
 	}
 	if l.shouldDrop() {
 		return nil, errno.BbrLimiterError

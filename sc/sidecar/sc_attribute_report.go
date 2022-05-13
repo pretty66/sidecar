@@ -324,11 +324,11 @@ func (res *resourceData) reset() {
 }
 
 type MSPReportResource struct {
-	UniqueId           string  `json:"unique_id"`
+	UniqueID           string  `json:"unique_id"`
 	AlertType          int     `json:"alert_type"`
 	ResourceType       int     `json:"resource_type"`
-	Cpu                float64 `json:"cpu"`
-	CpuCoreCount       float64 `json:"cpu_core_count"`
+	CPU                float64 `json:"cpu"`
+	CPUCoreCount       float64 `json:"cpu_core_count"`
 	CPUThreshold       float64 `json:"cpu_threshold"`
 	Mem                float64 `json:"mem"`
 	MemoryMB           int64   `json:"memory_mb"`
@@ -342,25 +342,25 @@ type MSPReportResource struct {
 	EventTime          int64   `json:"event_time"`
 }
 
-func (tp *TrafficProxy) reportToRedis(attr *ServiceMonitorAttributes, scCpuLimit, serviceCpuLimit float64) {
-	if scCpuLimit > 0 {
-		if attr.EnvMemoryUsed > tp.Confer.Opts.MSPEventConf.SideCarMem || attr.SideCarCPU > scCpuLimit {
+func (tp *TrafficProxy) reportToRedis(attr *ServiceMonitorAttributes, scCPULimit, serviceCPULimit float64) {
+	if scCPULimit > 0 {
+		if attr.EnvMemoryUsed > tp.Confer.Opts.MSPEventConf.SideCarMem || attr.SideCarCPU > scCPULimit {
 			resourceType := 0
 			if attr.EnvMemoryUsed > tp.Confer.Opts.MSPEventConf.SideCarMem &&
-				attr.SideCarCPU > scCpuLimit {
+				attr.SideCarCPU > scCPULimit {
 				resourceType = 3
 			} else if attr.EnvMemoryUsed > tp.Confer.Opts.MSPEventConf.SideCarMem {
 				resourceType = 2
-			} else if attr.SideCarCPU > scCpuLimit {
+			} else if attr.SideCarCPU > scCPULimit {
 				resourceType = 1
 			}
 			data := MSPReportResource{
-				UniqueId:     tp.Confer.Opts.MiscroServiceInfo.UniqueID,
+				UniqueID:     tp.Confer.Opts.MiscroServiceInfo.UniqueID,
 				AlertType:    3,
 				ResourceType: resourceType,
-				Cpu:          attr.SideCarCPU,
-				CpuCoreCount: attr.SideCarCPUCoreCount,
-				CPUThreshold: scCpuLimit,
+				CPU:          attr.SideCarCPU,
+				CPUCoreCount: attr.SideCarCPUCoreCount,
+				CPUThreshold: scCPULimit,
 				Mem:          attr.EnvMemoryUsed,
 				MemoryMB:     attr.EnvMemoryUsedMB,
 				MemThreshold: tp.Confer.Opts.MSPEventConf.SideCarMem,
@@ -378,24 +378,24 @@ func (tp *TrafficProxy) reportToRedis(attr *ServiceMonitorAttributes, scCpuLimit
 			event.Client().Report(event.EVENT_TYPE_RESOURCE, data)
 		}
 	}
-	if serviceCpuLimit > 0 {
-		if attr.ServiceMemory > tp.Confer.Opts.MSPEventConf.ServerMem || attr.ServiceCPU > serviceCpuLimit {
+	if serviceCPULimit > 0 {
+		if attr.ServiceMemory > tp.Confer.Opts.MSPEventConf.ServerMem || attr.ServiceCPU > serviceCPULimit {
 			resourceType := 0
-			if attr.ServiceMemory > tp.Confer.Opts.MSPEventConf.ServerMem && attr.ServiceCPU > serviceCpuLimit {
+			if attr.ServiceMemory > tp.Confer.Opts.MSPEventConf.ServerMem && attr.ServiceCPU > serviceCPULimit {
 				resourceType = 3
 			} else if attr.ServiceMemory > tp.Confer.Opts.MSPEventConf.ServerMem {
 				resourceType = 2
-			} else if attr.ServiceCPU > serviceCpuLimit {
+			} else if attr.ServiceCPU > serviceCPULimit {
 				resourceType = 1
 			}
 
 			data := MSPReportResource{
-				UniqueId:           tp.Confer.Opts.MiscroServiceInfo.UniqueID,
+				UniqueID:           tp.Confer.Opts.MiscroServiceInfo.UniqueID,
 				AlertType:          4,
 				ResourceType:       resourceType,
-				Cpu:                attr.ServiceCPU,
-				CpuCoreCount:       attr.ServiceCPUCoreCount,
-				CPUThreshold:       serviceCpuLimit,
+				CPU:                attr.ServiceCPU,
+				CPUCoreCount:       attr.ServiceCPUCoreCount,
+				CPUThreshold:       serviceCPULimit,
 				Mem:                attr.ServiceMemory,
 				MemoryMB:           attr.ServiceMemoryMB,
 				MemThreshold:       tp.Confer.Opts.MSPEventConf.ServerMem,
@@ -416,7 +416,7 @@ func (tp *TrafficProxy) reportToRedis(attr *ServiceMonitorAttributes, scCpuLimit
 var (
 	_influxDBTags    = make(map[string]string, 20)
 	_influxDBFields  = make(map[string]interface{}, 50)
-	_reg_timestamp   = strconv.FormatInt(time.Now().UnixNano(), 10)
+	_regTimestamp    = strconv.FormatInt(time.Now().UnixNano(), 10)
 	_httpMetricsTags = make(map[string]string, 20)
 )
 
@@ -432,7 +432,7 @@ func (tp *TrafficProxy) reportToInfluxDB(attr *ServiceMonitorAttributes, bp clie
 	_influxDBTags["site_uid"] = attr.SiteUID
 	_influxDBTags["env"] = attr.Env
 	_influxDBTags["msp_se_env"] = attr.MspSeEnv
-	_influxDBTags["reg_timestamp"] = _reg_timestamp
+	_influxDBTags["reg_timestamp"] = _regTimestamp
 
 	_influxDBFields["inlet_flow"] = attr.InletFlow
 	_influxDBFields["outlet_flow"] = attr.OutletFlow
@@ -526,7 +526,7 @@ func (tp *TrafficProxy) RenewSetAttribute() (out map[string]string) {
 }
 
 func recordResourceWarning(alert MSPReportResource) {
-	cpu := utils.FloatToString(alert.Cpu) + "%"
+	cpu := utils.FloatToString(alert.CPU) + "%"
 	cpuThreshold := utils.FloatToString(alert.CPUThreshold) + "%"
 	mem := utils.FloatToString(alert.Mem) + "%"
 	memThreshold := utils.FloatToString(alert.MemThreshold) + "%"
@@ -543,7 +543,7 @@ func recordResourceWarning(alert MSPReportResource) {
 		eventMsg = "micro service resource bottom warning"
 		alertType = alertTypeService
 	}
-	if alert.Cpu >= alert.CPUThreshold {
+	if alert.CPU >= alert.CPUThreshold {
 		alert.ResourceType = RESOURCE_CPU_TYPE
 		resourceType = resourceTypeCPU
 		rule = fmt.Sprintf("current cpu: %s(core), threshold reached: %s(core), k8s set minimum value: %dm, k8s set maximum value: %dm", cpu, cpuThreshold, alert.ServiceCPURequests, alert.ServiceCPULimits)
@@ -553,7 +553,7 @@ func recordResourceWarning(alert MSPReportResource) {
 		resourceType = resourceTypeMemory
 		rule = fmt.Sprintf("current memory: %s, threshold reached: %s, k8s set minimum value: %dm, k8s set maximum value: %dm", mem, memThreshold, alert.ServiceMemRequests, alert.ServiceMemLimits)
 	}
-	if alert.Cpu >= alert.CPUThreshold && alert.Mem >= alert.MemThreshold {
+	if alert.CPU >= alert.CPUThreshold && alert.Mem >= alert.MemThreshold {
 		alert.ResourceType = RESOURCE_BOTH_TYPE
 		resourceType = resourceTypeBoth
 		rule = fmt.Sprintf("current cpu: %s(core), threshold reached: %s(core), k8s set minimum value: %dm, k8s set maximum value: %dm; current memory: %s, threshold reached: %s, k8s set minimum value: %dm, k8s set maximum value: %dm",
@@ -571,7 +571,7 @@ func recordResourceWarning(alert MSPReportResource) {
 		time.Unix(0, alert.EventTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05.000"),
 		eventMsg,
 		alert.ServiceName,
-		alert.UniqueId,
+		alert.UniqueID,
 		alert.HostName,
 		rule,
 	)

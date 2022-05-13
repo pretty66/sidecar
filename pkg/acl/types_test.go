@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewAclRuleByConfig(t *testing.T) {
-	conf := AclRules{
+	conf := Rules{
 		Rules: []Rule{
 			{
 				Kind: "HTTPRouteGroup",

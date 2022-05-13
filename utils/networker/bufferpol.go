@@ -16,9 +16,9 @@ func NewBufferPool() *BufferPool {
 }
 
 func (bp *BufferPool) Get() []byte {
-	return bp.pool.Get().([]byte)
+	return *(bp.pool.Get().(*[]byte))
 }
 
 func (bp *BufferPool) Put(v []byte) {
-	bp.pool.Put(v)
+	bp.pool.Put(&v)
 }

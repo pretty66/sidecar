@@ -12,7 +12,7 @@ func TestJsonRouterConfig(t *testing.T) {
 		Timestamp:  time.Now().Unix() / 1e6,
 		Routers: []Router{
 			{
-				Match: RouterMatch{
+				Match: Match{
 					Prefix: "*",
 					Path:   "1",
 					Regex:  "2",

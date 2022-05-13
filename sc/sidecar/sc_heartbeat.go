@@ -34,14 +34,14 @@ type heartbeatAlert struct {
 
 var healthcheckStatus atomic.Value
 
-func (sc *TrafficProxy) heartbeat(ins *sesdk.Instance) {
-	if !sc.Confer.Opts.Heartbeat.Enable {
+func (tp *TrafficProxy) heartbeat(ins *sesdk.Instance) {
+	if !tp.Confer.Opts.Heartbeat.Enable {
 		return
 	}
-	log.Printf("Start the heartbeat, every %d seconds.", sc.Confer.Opts.Heartbeat.Gap)
+	log.Printf("Start the heartbeat, every %d seconds.", tp.Confer.Opts.Heartbeat.Gap)
 
 	startUnixTime := time.Now().Unix()
-	heartbeat := health.NewHealth(sc.Confer.Opts.Heartbeat.API, time.Duration(sc.Confer.Opts.Heartbeat.Timeout)*time.Second)
+	heartbeat := health.NewHealth(tp.Confer.Opts.Heartbeat.API, time.Duration(tp.Confer.Opts.Heartbeat.Timeout)*time.Second)
 
 	is, out, err := heartbeat.GetHealth()
 
@@ -49,7 +49,7 @@ func (sc *TrafficProxy) heartbeat(ins *sesdk.Instance) {
 	if err != nil {
 	} else if is {
 		ins.Status = discovery.InstanceStatusReceive
-		err = sc.Discovery.Set(ins)
+		err = tp.Discovery.Set(ins)
 		if err != nil {
 			ins.Status = discovery.InstanceStatusNotReceive
 		} else {
@@ -57,20 +57,20 @@ func (sc *TrafficProxy) heartbeat(ins *sesdk.Instance) {
 			cilog.LogInfof(cilog.LogNameSidecar, "register success, output:%s", string(out))
 		}
 	}
-	heartbeat.StartHealth(sc.OfflineCtx, time.Duration(sc.Confer.Opts.Heartbeat.Gap)*time.Second, func(count *health.Counts, is bool, out []byte, err error) {
+	heartbeat.StartHealth(tp.OfflineCtx, time.Duration(tp.Confer.Opts.Heartbeat.Gap)*time.Second, func(count *health.Counts, is bool, out []byte, err error) {
 		healthcheckStatus.Store(is)
-		if count.ConsecutiveSuccesses >= sc.Confer.Opts.Heartbeat.ConsecutiveSuccesses && ins.Status == discovery.InstanceStatusNotReceive {
+		if count.ConsecutiveSuccesses >= tp.Confer.Opts.Heartbeat.ConsecutiveSuccesses && ins.Status == discovery.InstanceStatusNotReceive {
 			startUnixTime = 0
 			ins.Status = discovery.InstanceStatusReceive
-			err = sc.Discovery.Set(ins)
+			err = tp.Discovery.Set(ins)
 			if err != nil {
 				ins.Status = discovery.InstanceStatusNotReceive
 				return
 			}
 			ha := heartbeatAlert{
-				UniqueID:    sc.Confer.Opts.MiscroServiceInfo.UniqueID,
-				Hostname:    sc.Confer.Opts.MiscroServiceInfo.Hostname,
-				ServiceName: sc.Confer.Opts.MiscroServiceInfo.ServiceName,
+				UniqueID:    tp.Confer.Opts.MiscroServiceInfo.UniqueID,
+				Hostname:    tp.Confer.Opts.MiscroServiceInfo.Hostname,
+				ServiceName: tp.Confer.Opts.MiscroServiceInfo.ServiceName,
 				Status:      discovery.InstanceStatusReceive,
 				EventTime:   time.Now().UnixNano() / 1e6,
 			}
@@ -79,18 +79,17 @@ func (sc *TrafficProxy) heartbeat(ins *sesdk.Instance) {
 			event.Client().Report(event.EVENT_TYPE_HEARTBEAT, ha)
 			return
 		}
-		if count.ConsecutiveFailures >= sc.Confer.Opts.Heartbeat.ConsecutiveFailures && ins.Status == discovery.InstanceStatusReceive {
-
+		if count.ConsecutiveFailures >= tp.Confer.Opts.Heartbeat.ConsecutiveFailures && ins.Status == discovery.InstanceStatusReceive {
 			ins.Status = discovery.InstanceStatusNotReceive
-			err = sc.Discovery.Set(ins)
+			err = tp.Discovery.Set(ins)
 			if err != nil {
 				ins.Status = discovery.InstanceStatusReceive
 				return
 			}
 			ha := heartbeatAlert{
-				UniqueID:    sc.Confer.Opts.MiscroServiceInfo.UniqueID,
-				Hostname:    sc.Confer.Opts.MiscroServiceInfo.Hostname,
-				ServiceName: sc.Confer.Opts.MiscroServiceInfo.ServiceName,
+				UniqueID:    tp.Confer.Opts.MiscroServiceInfo.UniqueID,
+				Hostname:    tp.Confer.Opts.MiscroServiceInfo.Hostname,
+				ServiceName: tp.Confer.Opts.MiscroServiceInfo.ServiceName,
 				Status:      discovery.InstanceStatusNotReceive,
 				EventTime:   time.Now().UnixNano() / 1e6,
 			}
@@ -134,12 +133,12 @@ func recordHeartBeatWarning(params heartbeatAlert) {
 	}
 }
 
-func (sc *TrafficProxy) k8sheartbeat() {
-	if !sc.Confer.Opts.Heartbeat.Enable {
+func (tp *TrafficProxy) k8sheartbeat() {
+	if !tp.Confer.Opts.Heartbeat.Enable {
 		healthcheckStatus.Store(true)
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc(sc.Confer.Opts.K8SHeartbeat.API, func(writer http.ResponseWriter, request *http.Request) {
+	mux.HandleFunc(tp.Confer.Opts.K8SHeartbeat.API, func(writer http.ResponseWriter, request *http.Request) {
 		var status int
 		if !healthcheckStatus.Load().(bool) {
 			status = http.StatusInternalServerError
@@ -148,7 +147,7 @@ func (sc *TrafficProxy) k8sheartbeat() {
 		}
 		writer.WriteHeader(status)
 	})
-	err := http.ListenAndServe(sc.Confer.Opts.K8SHeartbeat.BindAddress, mux)
+	err := http.ListenAndServe(tp.Confer.Opts.K8SHeartbeat.BindAddress, mux)
 	if err != nil && !errors.Is(err, net.ErrClosed) {
 		cilog.LogErrorw(cilog.LogNameSidecar, "k8s Failed to listen to the health check port", err)
 	}

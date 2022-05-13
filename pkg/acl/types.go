@@ -14,7 +14,7 @@ type HeaderFunc func(key string) (string, bool)
 
 var _supportKind = []string{"HTTPRouteGroup"}
 
-type AclRules struct {
+type Rules struct {
 	Rules   []Rule      `json:"rules"`
 	Sources SourceMatch `json:"sources"`
 }
@@ -25,8 +25,8 @@ type Rule struct {
 	Matches []*HTTPMatch `json:"matches"`
 }
 
-func NewACLRuleByConfig(conf []byte) (*AclRules, error) {
-	var arule AclRules
+func NewACLRuleByConfig(conf []byte) (*Rules, error) {
+	var arule Rules
 	err := json.Unmarshal(conf, &arule)
 	if err != nil {
 		return nil, fmt.Errorf("acl rule resolution error：%s, %v", string(conf), err)
@@ -116,7 +116,7 @@ func (sm SourceMatch) CheckAllow(source string) bool {
 	return utils.InArray(source, sm)
 }
 
-func (ar *AclRules) Verify(fromUniqueID, method, path string, head HeaderFunc) error {
+func (ar *Rules) Verify(fromUniqueID, method, path string, head HeaderFunc) error {
 	if !ar.Sources.CheckAllow(fromUniqueID) {
 		return errno.RequestForbidden
 	}

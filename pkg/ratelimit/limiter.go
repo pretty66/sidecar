@@ -18,11 +18,11 @@ const (
 	Drop
 )
 
-type allowOptions struct{}
+type AllowOptions struct{}
 
 // AllowOptions allow options.
 type AllowOption interface {
-	Apply(*allowOptions)
+	Apply(*AllowOptions)
 }
 
 // DoneInfo done info.
@@ -32,8 +32,8 @@ type DoneInfo struct {
 }
 
 // DefaultAllowOpts returns the default allow options.
-func DefaultAllowOpts() allowOptions {
-	return allowOptions{}
+func DefaultAllowOpts() *AllowOptions {
+	return &AllowOptions{}
 }
 
 // Limiter limit interface.

@@ -39,7 +39,7 @@ func NewHttpSource(url string) resource.Resource {
 	return res
 }
 
-func (res *HttpSource) InitSuccess() bool {
+func (hs *HttpSource) InitSuccess() bool {
 	return limitedCoreCount > 0
 }
 

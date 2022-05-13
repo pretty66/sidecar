@@ -282,7 +282,8 @@ func ShutdownEchoServer(ctx context.Context, server *http.Server, done func(err 
 	var err error
 	select {
 	case <-ctx.Done():
-		ctxs, _ := context.WithTimeout(context.Background(), time.Second*10)
+		ctxs, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
 		err = server.Shutdown(ctxs)
 	}
 	done(err)
